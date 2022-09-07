@@ -8,7 +8,8 @@ from nats.errors import TimeoutError
 ## An example of subcribing to a consumer to retrieve older data
 ##
 
-durable = False
+durable = True if os.getenv("DURABLE") else False
+ordered = True if os.getenv("ORDERED") else False
 
 async def main():
     token = os.getenv("TOKEN")
@@ -25,9 +26,9 @@ async def main():
         print("\n+++++")
         print(f"Topic: plane-{topic}")
         if durable:
-            sub = await js.subscribe(f"plane.{topic}", durable=f"durable-{topic}", ordered_consumer=True)
+            sub = await js.subscribe(f"plane.{topic}", durable=f"durable-{topic}", ordered_consumer=ordered)
         else:
-            sub = await js.subscribe(f"plane.{topic}", ordered_consumer=True)
+            sub = await js.subscribe(f"plane.{topic}", ordered_consumer=ordered)
         while True:
             try:
                 msg = await sub.next_msg()

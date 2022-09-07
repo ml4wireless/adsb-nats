@@ -13,6 +13,9 @@ import getopt
 import json
 import os.path
 
+import pytz
+import datetime
+
 import geocoder
 import uuid
 
@@ -39,6 +42,9 @@ def printStuff (pText):
 vDebugMode = 0
 vSnapMode = 0
 
+def timestamp():
+    now = datetime.now(pytz.timezone('UTC'))
+    return now.isoformat()
 
 async def consumer(q):
     
@@ -68,6 +74,7 @@ async def consumer(q):
 
             jdata = json.dumps( {
                 'reporter' : reporter_id,
+                'time' : timestamp(),
                 'lat' : mylat,
                 'long' : mylong
                 })
@@ -82,6 +89,7 @@ async def consumer(q):
                 if len(data) == 4:
                     jdata = json.dumps( {
                         'reporter': reporter_id,
+                        'time' : timestamp(),
                         "ICAO" : data[0],
                         "feet" : data[1],
                         "lat" : data[2],
@@ -92,6 +100,7 @@ async def consumer(q):
                 elif len(data) == 2:
                     jdata = json.dumps( {
                         'reporter': reporter_id,
+                        'time' : timestamp(),
                         "ICAO" : data[0],
                         "ident" : data[1]})
                     print(f"publish ident {jdata}")
@@ -187,4 +196,5 @@ async def main():
 
 
 if __name__ == '__main__':
+    print("time stamp is ", timestamp())
     asyncio.run(main())
