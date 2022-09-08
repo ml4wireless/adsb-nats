@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import asyncio
 import nats
@@ -105,6 +106,7 @@ async def consumer(q):
                         "ident" : data[1]})
                     print(f"publish ident {jdata}")
                     await nc.publish("plane.ident", jdata.encode() )
+                sys.stdout.flush()
                 q.task_done()
         finally:
             if sub:
