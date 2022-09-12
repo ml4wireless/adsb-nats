@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 import asyncio
-import os, sys
+import os
+import sys
 
 import nats
 from nats.errors import TimeoutError
 
 ##
-## An example of subcribing to a consumer to retrieve older data
+# An example of subcribing to a consumer to retrieve older data
 ##
 
 durable = True if os.getenv("DURABLE") else False
 ordered = True if os.getenv("ORDERED") else False
+
 
 async def main():
     token = os.getenv("TOKEN")
@@ -23,7 +25,7 @@ async def main():
     js = nc.jetstream()
     await js.add_stream(name="planes", subjects=["plane.*"])
 
-    for topic in [ "reporter", "ident", "loc" ]:
+    for topic in ["reporter", "ident", "loc"]:
         print("\n+++++")
         print(f"Topic: plane-{topic}")
         if durable:
@@ -40,4 +42,3 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
-
