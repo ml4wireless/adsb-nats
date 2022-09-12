@@ -25,6 +25,7 @@ from datetime import datetime, date
 from subprocess import call
 
 cDump1080 = "/usr/local/bin/dump1090"
+nats_host = os.getenv("NATS_HOST", "localhost:8088")
 
 
 def formNumber(pInputText):
@@ -68,7 +69,7 @@ async def consumer(q):
                     "You need to set the TOKEN environment variable to your NATS token")
                 sys.exit(1)
 
-            nc = await nats.connect(f"nats://{token}@198.59.70.45:8080")
+            nc = await nats.connect(f"nats://{token}@{nats_host}")
             print("Create jetstream")
             js = nc.jetstream()
             print("Create stream")

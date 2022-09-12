@@ -12,6 +12,7 @@ from nats.errors import TimeoutError
 
 durable = True if os.getenv("DURABLE") else False
 ordered = True if os.getenv("ORDERED") else False
+nats_host = os.getenv("NATS_HOST", "localhost:8088")
 
 
 async def main():
@@ -19,7 +20,7 @@ async def main():
     if not token:
         print("You need to define TOKEN")
         sys.exit(1)
-    nc = await nats.connect(f"nats://{token}@198.59.70.45:8080")
+    nc = await nats.connect(f"nats://{token}@{nats_host}")
 
     # Create JetStream context incase it's not defined
     js = nc.jetstream()
