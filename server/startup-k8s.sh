@@ -8,19 +8,13 @@ fi
 echo "Installing helm chart..."
 sudo -E helm install plane-nats nats/nats -f config/k8s-values.yml --set auth.token=$TOKEN
 
-echo "Waiting for background startup tasks..."
-sleep 30
+stime=90
+echo "Waiting ${stime}s for background startup tasks..."
+sleep $stime 
 
 echo "Exposing server node as service..."
-sudo kubectl expose pods plane-nats-0 --type=NodePort --port=4222 --target-port=8080
+sudo kubectl apply -f config/nats-service.yml
+sleep 3
 
-services=$(sudo kubectl get services plane-nats-0)
-echo "Service:"
-echo $services
-echo
-port=$(echo $services | sed -n 2p | awk '{print $5}' | cut -d':' -f2 | cut -d'/' -f1)
-nats_host=$(sudo kubectl describe nodes | grep hostname | sed -n 1p | cut -d= -f2)
-echo "Client Connection URL"
-echo "\tnats://\$TOKEN@$nats_host:$port"
-echo
+./get-connect-url.sh
 

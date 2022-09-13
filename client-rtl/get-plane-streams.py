@@ -12,7 +12,7 @@ from nats.errors import TimeoutError
 
 durable = True if os.getenv("DURABLE") else False
 ordered = True if os.getenv("ORDERED") else False
-nats_host = os.getenv("NATS_HOST", "localhost:8088")
+nats_host = os.getenv("NATS_HOST", "localhost:30303")
 
 
 async def main():

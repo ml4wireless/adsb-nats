@@ -19,6 +19,7 @@ In a terminal with `kubectl` and `helm` setup to connect to your k8s controller
 - `./startup-k8s.sh`
 
 Note the client connection URL printed at the end, the port and host may vary
+(but the port SHOULD be 30303)
 
 ## Running the Client
 Ensure you have the jetstream-supporting NATS python library installed

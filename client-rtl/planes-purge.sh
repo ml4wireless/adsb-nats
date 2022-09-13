@@ -5,7 +5,7 @@
 if [[ -z "$NATS_HOST" ]]; then
     echo "Using NATS host $NATS_HOST"
 else
-    NATS_HOST="localhost:8088"
+    NATS_HOST="localhost:30303"
     echo "Using NATS host $NATS_HOST"
 fi
 

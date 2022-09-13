@@ -1,5 +1,5 @@
 server_name=$SERVER
-listen: 0.0.0.0:8080
+listen: 0.0.0.0:8088
 
 # TOKEN defined in environment variables
 
@@ -18,7 +18,7 @@ cluster {
   # This server will connect to discovered routes using this user
   authorization {
     user: route_user
-    password: secret
+    password: sahai
     timeout: 1
   }
 
@@ -27,9 +27,9 @@ cluster {
   # Other servers can connect to us if they supply the correct credentials
   # in their routes definitions from above.
   routes = [
-      nats-route://route_user:secret@198.59.70.45:4244
-      nats-route://route_user:secret@198.59.70.67:4244
-      nats-route://route_user:secret@198.59.70.109:4244
+      nats-route://route_user:sahai@192.168.42.202:4244
+      nats-route://route_user:sahai@192.168.42.204:4244
+      # nats-route://route_user:sahai@192.168.42.100:4244
   ]
 
   no_advertise: true
@@ -37,8 +37,8 @@ cluster {
 }
 
 jetstream {
-   store_dir=/home/ubuntu/nats
-   
+   store_dir=/home/jsanz/nats
+
    // 1GB
    max_memory_store: 1073741824
 

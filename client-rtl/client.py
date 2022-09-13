@@ -25,7 +25,7 @@ from datetime import datetime, date
 from subprocess import call
 
 cDump1080 = "/usr/local/bin/dump1090"
-nats_host = os.getenv("NATS_HOST", "localhost:8088")
+nats_host = os.getenv("NATS_HOST", "localhost:30303")
 
 
 def formNumber(pInputText):
