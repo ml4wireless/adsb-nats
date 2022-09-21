@@ -24,7 +24,9 @@ from pprint import pprint
 from datetime import datetime, date
 from subprocess import call
 
-cDump1080 = "/usr/local/bin/dump1090"
+cDump1090 = "/usr/local/bin/dump1090"
+playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
+playback_file = ""
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
 
 
@@ -123,20 +125,24 @@ async def consumer(q):
 
 
 async def getdump(q):
+    # Create ADS-B detection process
     print("Kill old dump1090")
     os.system("killall dump1090")
     print("create subprocess")
-    sproc = await asyncio.create_subprocess_shell(cDump1080,
-                                                  stdout=asyncio.subprocess.PIPE,
-                                                  stderr=asyncio.subprocess.STDOUT)
+    if not playback_file:
+        sproc = await asyncio.create_subprocess_shell(cDump1090,
+                                                      stdout=asyncio.subprocess.PIPE,
+                                                      stderr=asyncio.subprocess.STDOUT)
+    else:
+        sproc = await asyncio.create_subprocess_shell(playback1090.format(playback_file),
+                                                      stdout=asyncio.subprocess.PIPE,
+                                                      stderr=asyncio.subprocess.STDOUT)
+
+    # Read and parse ADS-B message reports
     try:
         textblock = ''
-
         while True:
-
-            #            print("await io")
             line = await sproc.stdout.readline()
-#            print("len is", len(line), "and line", line)
             textblock = textblock + line.decode("utf-8")
 
             if "Error opening the RTLSDR device" in textblock:
@@ -178,7 +184,7 @@ async def getdump(q):
                     await q.put((valICAO, valFeet, valLatitude, valLongitude))
 
     except KeyboardInterrupt:
-        print(f"Killing {cDump} process: {sproc.pid}")
+        print(f"Killing {cDump1090}/{playback1090} process: {sproc.pid}")
         sproc.kill()
 
 
@@ -189,9 +195,9 @@ vDebugMode = 0
 vSnapMode = 0
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "sda:b:", ["verbose", "debug="])
+    opts, args = getopt.getopt(sys.argv[1:], "sda:b:f:", ["verbose", "debug=", "playback-file="])
 except getopt.GetoptError:
-    print('plane-kafka.py [-v|--verbose] [-d XX|--debug=]')
+    print('plane-kafka.py [-v|--verbose] [-d XX|--debug=] [-f|--playback-file=]')
     sys.exit(2)
 for opt, arg in opts:
     if opt in ('-d', '--debug'):
@@ -202,6 +208,11 @@ for opt, arg in opts:
             sys.exit(2)
     elif opt in ('-v', '--verbose'):
         vVerboseMode = 1
+    elif opt in ('-f', '--playback-file'):
+        playback_file = arg
+        if not os.path.isfile(playback_file):
+            print("File {} does not exist".format(playback_file))
+            sys.exit(2)
 
 
 async def main():
