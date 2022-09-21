@@ -74,8 +74,7 @@ async def consumer(q):
             js = nc.jetstream()
             print("Create stream")
 
-            await js.add_stream(name="planes",
-                                subjects=["plane.*"])
+            await js.add_stream(name="planes", subjects=["plane.>"])
 
             mygeo = geocoder.ip('me')
             mylat, mylong = mygeo.latlng

@@ -24,7 +24,7 @@ async def main():
 
     # Create JetStream context incase it's not defined
     js = nc.jetstream()
-    await js.add_stream(name="planes", subjects=["plane.*"])
+    await js.add_stream(name="planes", subjects=["plane.>"])
 
     for topic in ["reporter", "ident", "loc"]:
         print("\n+++++")
