@@ -127,7 +127,9 @@ async def main(master, aircraft):
                              publish_annotations(js, q, quit_event))
     finally:
         print("Draining NATS connection")
-        await nc.drain()
+        quit_event.set()
+        await asyncio.sleep(0.25)
+        await nc.close()
 
 
 if __name__ == "__main__":
@@ -136,4 +138,7 @@ if __name__ == "__main__":
         master, aircraft = load_dbs("./aircraft-annotator")
     else:
         master, aircraft = load_dbs(sys.argv[1])
-    asyncio.run(main(master, aircraft))
+    try:
+        asyncio.run(main(master, aircraft))
+    except KeyboardInterrupt:
+        sys.exit(0)
