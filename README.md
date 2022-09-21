@@ -29,7 +29,7 @@ pip install -U nats-py
 
 Set the token and connection environment variables
 - `export TOKEN=<your token>`
-- `export NATS_HOST=nats://$TOKEN@<host>:<port>`
+- `export NATS_HOST="nats://$TOKEN@<host>:<port>"`
 
 Run the client
 ```
