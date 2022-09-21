@@ -60,15 +60,16 @@ async def annotate(q, quit_event, dbs, sub, topic):
     while not quit_event.is_set():
         try:
             msg = await sub.next_msg()
-            # annotate here
             data = msg.data.decode("utf-8")
             jdata = json.loads(data)
+            # Ack msg before potentially lengthy db lookup, but after successful decode
+            await msg.ack()
+            # Lookup ICAO
             jdata.update(lookup_icao(jdata["ICAO"], master, aircraft))
             print(f'{msg.subject}: ICAO {jdata["ICAO"]} annotated')
             await q.put((msg.subject, jdata))
-            await msg.ack()
         except TimeoutError:
-            print(f"Timeout error on {topic}")
+            print(f"Receive timeout on {topic}")
             # break
 
 
@@ -97,8 +98,7 @@ async def publish_annotations(js, q, quit_event):
             data["annotator"] = annotator_id
             sdata = json.dumps(data)
             ack = await js.publish(subject + ".annotated", sdata.encode())
-            print(f'Ack: stream={ack.stream}, sequence={ack.seq}')
-            print(f'Published annotation for ICAO {data["ICAO"]}')
+            print(f'Published annotation for ICAO {data["ICAO"]}, ack seq {ack.seq}')
             q.task_done()
         except Exception as e:
             print("Publish got exception:", e)
@@ -122,6 +122,7 @@ async def main(master, aircraft):
     await js.add_stream(name="planes", subjects=["plane.>"])
 
     try:
+        # Optionally increase parallelization by adding copies of the functions to the gather
         await asyncio.gather(loc_ident_watcher(js, q, quit_event, (master, aircraft)),
                              publish_annotations(js, q, quit_event))
     finally:
