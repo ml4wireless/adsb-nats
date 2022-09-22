@@ -1,7 +1,7 @@
 # Plane-NATS
 #### ADS-B Flight Tracking w/ NATS
 ------------
-## Running the Server
+## Running the server
 ### Standalone
 Modify `server/cluster-config.json` to match your environment
 - Adjust `cluster.routes` IP addresses
@@ -13,26 +13,35 @@ On each server node (perhaps in Tmux)
 - `export TOKEN=<your token>`
 - `./start-server.sh`
 
-### Using Kubernetes Locally
+### Using Kubernetes 
 In a terminal with `kubectl` and `helm` setup to connect to your k8s controller
+- `cd` to the `server` directory
 - `export TOKEN=<your token>`
-- `./startup-k8s.sh`
+- `./k8s[-minikube]-startup.sh`
 
 Note the client connection URL printed at the end, the port and host may vary
-(but the port SHOULD be 30303)
+(but the port SHOULD be 30303 unless running under minikube)
 
-## Running the Client
-Ensure you have the jetstream-supporting NATS python library installed
+## Running the client
+Ensure you have the required python libraries
 ```
-pip install -U nats-py
+pip install -r requirements.txt
 ```
 
 Set the token and connection environment variables
 - `export TOKEN=<your token>`
 - `export NATS_HOST="nats://$TOKEN@<host>:<port>"`
 
-Run the client
+Run the client in the `client-rtl` directory
 ```
-python client.py
+python client.py [-f PLAYBACKFILE]
+```
+
+## Running the aircraft annotator
+Follow the instructions in `aircraft-annotator/README.md`
+
+## Viewing live data
+```
+nats -s nats://$TOKEN@$NATS_HOST sub ">"
 ```
 
