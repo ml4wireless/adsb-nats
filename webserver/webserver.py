@@ -3,11 +3,12 @@ import asyncio
 import json
 import nats
 from nats.errors import TimeoutError
+from json import JSONDecodeError
 import os
 import sys
 import uuid
 
-nats_host = os.getenv("NATS_HOST", "localhost:30303")
+
 
 async def output_stream(quit_event, sub, topic):
     while not quit_event.is_set():
@@ -24,6 +25,10 @@ async def output_stream(quit_event, sub, topic):
             out_file.close()
         except TimeoutError:
             print(f"Receive timeout on {topic}")
+        except JSONDecodeError:
+            print("An unexcepted JSON Format")
+        except KeyError:
+            print("Keyerror in JSON")
     
 
 async def get_annotated_stream(js, quit_event):
@@ -45,10 +50,19 @@ async def get_annotated_stream(js, quit_event):
 
 async def main():
     quit_event = asyncio.Event()
-    token = os.getenv("TOKEN")
+    # token = os.getenv("TOKEN")
+    token="sahai"
+ 
     if not token:
         print("You need to define TOKEN")
         sys.exit(1)
+    
+    # nats_host = os.getenv("NATS_HOST", "localhost:30303")
+    nats_host="a15d11836d0644f6da0d09cbd81fae4f-949e37ea0352e6ad.elb.us-west-2.amazonaws.com:4222"
+    if not nats_host:
+        print("You need to define NATS_HOST")
+        sys.exit(1)
+
     print("Connect to NATS")
     nc = await nats.connect(f"nats://{token}@{nats_host}")
     print("Create JetStream if not exists")
