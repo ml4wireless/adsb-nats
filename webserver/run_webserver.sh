@@ -5,5 +5,6 @@ TOKEN=${TOKEN}
 docker run -d --privileged \
        -e NATS_HOST=${NATS_HOST} \
        -e TOKEN=${TOKEN} \
+       -v $(pwd):/app/webserver \
        --network "host" \
-       aircraft-webserver:latest
+       webserver:latest

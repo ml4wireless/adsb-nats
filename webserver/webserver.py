@@ -16,19 +16,22 @@ async def output_stream(quit_event, sub, topic):
             msg = await sub.next_msg()
             data = msg.data.decode("utf-8")
             jdata = json.loads(data)
-            print(f'{msg.subject}: get annotated data ICAO {jdata["ICAO"]} ')
+            print(f'{msg.subject}: get annotated data ICAO {jdata["ICAO"]} {jdata["time"]}')
             path = "annotated_data"
             if not os.path.exists(path):
                 os.makedirs(path)
-            out_file = open(f'annotated_data/annotated_{jdata["ICAO"]}.json', "w")
+            await msg.ack()
+            out_file = open(f'annotated_data/annotated_{jdata["ICAO"]}_{jdata["time"]}.json', "w")
             json.dump(jdata, out_file, indent = 4)
             out_file.close()
         except TimeoutError:
             print(f"Receive timeout on {topic}")
         except JSONDecodeError:
             print("An unexcepted JSON Format")
+            print(data)
         except KeyError:
             print("Keyerror in JSON")
+            print(data)
     
 
 async def get_annotated_stream(js, quit_event):
@@ -50,15 +53,15 @@ async def get_annotated_stream(js, quit_event):
 
 async def main():
     quit_event = asyncio.Event()
-    # token = os.getenv("TOKEN")
-    token="sahai"
+    token = os.getenv("TOKEN", None)
+    # token="sahai"
  
     if not token:
         print("You need to define TOKEN")
         sys.exit(1)
     
-    # nats_host = os.getenv("NATS_HOST", "localhost:30303")
-    nats_host="a15d11836d0644f6da0d09cbd81fae4f-949e37ea0352e6ad.elb.us-west-2.amazonaws.com:4222"
+    nats_host = os.getenv("NATS_HOST", None)
+    # nats_host="a15d11836d0644f6da0d09cbd81fae4f-949e37ea0352e6ad.elb.us-west-2.amazonaws.com:4222"
     if not nats_host:
         print("You need to define NATS_HOST")
         sys.exit(1)
@@ -66,6 +69,8 @@ async def main():
     print("Connect to NATS")
     nc = await nats.connect(f"nats://{token}@{nats_host}")
     print("Create JetStream if not exists")
+
+
     js = nc.jetstream()
     await js.add_stream(name="planes", subjects=["plane.>"])
     try:

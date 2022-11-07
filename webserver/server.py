@@ -10,7 +10,7 @@ app = Flask(__name__)
 @app.route('/hello')
 @app.route('/hello/<user>')
 def hello_world(user=None):
-    return "shit"
+    return "Please access /getStream"
 
 
 @app.route('/getStream')
@@ -23,3 +23,14 @@ def get_stream():
             dic=json.load(f)        
             dics.append(dic)
     return render_template('index.html', messages=dics)
+
+@app.route('/getJsonStream')
+def get_json_stream():
+    mypath = "annotated_data"
+    file_list = [join(mypath,f) for f in os.listdir(mypath) if isfile(join(mypath, f))]
+    dics = []
+    for file_name in file_list:
+        with open(file_name) as f:
+            dic=json.load(f)        
+            dics.append(dic)
+    return dics
