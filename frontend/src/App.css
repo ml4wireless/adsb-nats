@@ -3,12 +3,12 @@
 }
 
 .map-container {
-  height: 400px;
+  height: 800px;
   }
 
 .marker {
     background-color: #4CAF50;
-    border: 1px solid blue;
+    /* border: 1px solid black; */
     color: white;
     padding: 5px;
     text-align: center;
@@ -17,5 +17,7 @@
     font-size: 6px;
     margin: 4px 2px;
     border-radius: 50%;
+    width: 5px;
+    height: 5px;
   }
   
