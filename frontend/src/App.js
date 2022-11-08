@@ -1,24 +1,9 @@
 import './App.css';
 import React, { useRef, useEffect, useState } from 'react';
 import axios from 'axios';
-import ReactDOM from "react-dom";
-import mapboxgl from '!mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
-import geoJson from "./test.json";
+import mapboxgl from '!mapbox-gl';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiemppYW5nMzMwIiwiYSI6ImNsOXhhdzhiMDA4eG8zb21qbHkwbXdrdTcifQ.LGmuZP4-Pekk3ht0JuU6oQ';
-
-
-const Marker = ({ onClick, children, feature }) => {
-  const _onClick = () => {
-    onClick(feature.properties.description);
-  };
-
-  return (
-    <button onClick={_onClick} className="marker">
-      {children}
-    </button>
-  );
-};
+mapboxgl.accessToken = '';
 
 const App = () => {
   const mapContainerRef = useRef(null);
@@ -29,7 +14,6 @@ const App = () => {
     axios.get('http://ec2-35-80-21-70.us-west-2.compute.amazonaws.com:5000/getJsonStream')
       .then(res => {
         let data = res.data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
-        // data = data.slice(0, 100);
         setData(data);
 
         const map = new mapboxgl.Map({
@@ -79,10 +63,6 @@ const App = () => {
         return () => map.remove(); 
       })
   }, [])
-
-  const markerClicked = (title) => {
-    window.alert(title);
-  };
 
   return <div className="map-container" ref={mapContainerRef} />;
 };
