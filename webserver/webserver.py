@@ -6,9 +6,33 @@ from nats.errors import TimeoutError
 from json import JSONDecodeError
 import os
 import sys
+import pymysql
 import uuid
 
+connection = pymysql.connect(host='ec2-35-80-21-70.us-west-2.compute.amazonaws.com',
+                             user='sahai',
+                             password='sahai',
+                             database='webserver',
+                             cursorclass=pymysql.cursors.DictCursor)
 
+cursor = connection.cursor()
+sql = 'CREATE TABLE IF NOT EXISTS `dump1090` ( \
+    `id` int(11) NOT NULL AUTO_INCREMENT, \
+    `reporter` varchar(255) , \
+    `time` varchar(255) , \
+    `ICAO` varchar(255) , \
+    `feet` double(32,6) , \
+    `lat` double(32,6) , \
+    `lon` double(32,6) , \
+    `manufacturer` varchar(255) , \
+    `aircraft` varchar(255) , \
+    `n-number` varchar(255) , \
+    `registered` varchar(255) , \
+    `annotator` varchar(255) , \
+    PRIMARY KEY (`id`) \
+) DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;'
+# Create a new record
+cursor.execute(sql)
 
 async def output_stream(quit_event, sub, topic):
     while not quit_event.is_set():
@@ -16,22 +40,29 @@ async def output_stream(quit_event, sub, topic):
             msg = await sub.next_msg()
             data = msg.data.decode("utf-8")
             jdata = json.loads(data)
-            print(f'{msg.subject}: get annotated data ICAO {jdata["ICAO"]} {jdata["time"]}')
-            path = "annotated_data"
-            if not os.path.exists(path):
-                os.makedirs(path)
             await msg.ack()
-            out_file = open(f'annotated_data/annotated_{jdata["ICAO"]}_{jdata["time"]}.json', "w")
-            json.dump(jdata, out_file, indent = 4)
-            out_file.close()
+            print(f'{msg.subject}: get annotated data at {jdata.get("time")}')
+            # file solution
+            # path = "annotated_data"
+            # if not os.path.exists(path):
+            #     os.makedirs(path)
+            # out_file = open(f'annotated_data/annotated_{jdata["ICAO"]}_{jdata["time"]}.json', "w")
+            # json.dump(jdata, out_file, indent = 4)
+            # out_file.close()
+
+            # sql solution
+            sql = ' INSERT INTO `dump1090` (`reporter`,`time`, `ICAO`, \
+            `feet`,`lat`, `lon`,`manufacturer`,`aircraft`,`n-number`,`registered`,\
+             `annotator`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+            cursor.execute(sql, (jdata.get("reporter"), jdata.get("time"), jdata.get("ICAO"),
+            jdata.get("feet"), jdata.get("lat"),jdata.get("lon"),jdata.get("manufacturer"),
+            jdata.get("aircraft"),jdata.get("n-number"),jdata.get("registered"),jdata.get("annotator")))
+            connection.commit()
         except TimeoutError:
             print(f"Receive timeout on {topic}")
-        except JSONDecodeError:
+        except (JSONDecodeError,AttributeError):
             print("An unexcepted JSON Format")
-            print(data)
-        except KeyError:
-            print("Keyerror in JSON")
-            print(data)
+            print("Error data is:", data)
     
 
 async def get_annotated_stream(js, quit_event):
@@ -61,7 +92,6 @@ async def main():
         sys.exit(1)
     
     nats_host = os.getenv("NATS_HOST", None)
-    # nats_host="a15d11836d0644f6da0d09cbd81fae4f-949e37ea0352e6ad.elb.us-west-2.amazonaws.com:4222"
     if not nats_host:
         print("You need to define NATS_HOST")
         sys.exit(1)

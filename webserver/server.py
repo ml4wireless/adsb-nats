@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request
 import json
 import os 
+from flask_cors import CORS
 
 from os.path import isfile,join
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route('/')
 @app.route('/hello')
