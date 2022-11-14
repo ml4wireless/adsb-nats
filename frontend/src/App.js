@@ -11,7 +11,7 @@ const App = () => {
   const [colorMap, setColorMap] = useState(new Map());
 
   useEffect(() => {
-    axios.get('http://ec2-35-80-21-70.us-west-2.compute.amazonaws.com:5000/getJsonStream')
+    axios.get('https://cors-everywhere.herokuapp.com/http://ec2-35-80-21-70.us-west-2.compute.amazonaws.com:5000/getJsonStream')
       .then(res => {
         let data = res.data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
         setData(data);
@@ -30,13 +30,13 @@ const App = () => {
 
           // determine color
           var color;
-          if (colorMap.has(dataItem["icao"])){
-            color = colorMap.get(dataItem["icao"]);
+          if (colorMap.has(dataItem["ICAO"])){
+            color = colorMap.get(dataItem["ICAO"]);
           } else {
             var randomColor = "#" + Math.floor(Math.random()*16777215).toString(16);
-            colorMap.set(dataItem["icao"], randomColor);
+            colorMap.set(dataItem["ICAO"], randomColor);
             setColorMap(colorMap);
-            color = colorMap.get(dataItem["icao"]);
+            color = colorMap.get(dataItem["ICAO"]);
           }
 
           // create a parent class
@@ -49,7 +49,7 @@ const App = () => {
             .setPopup(
               new mapboxgl.Popup({ offset: 25 }) // add popups
               .setHTML(
-                `<h3>${dataItem["icao"]}</h3>`
+                `<h3>${dataItem["ICAO"]}</h3>`
               )
             )
             .setLngLat([dataItem["lon"], dataItem["lat"]])
