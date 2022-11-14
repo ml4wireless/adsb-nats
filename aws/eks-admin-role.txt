@@ -1,1 +1,0 @@
-arn:aws:iam::563060118978:role/eks-admin
