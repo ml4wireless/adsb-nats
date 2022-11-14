@@ -1,0 +1,9 @@
+FROM python:3.8-slim-buster
+# set working directory
+WORKDIR /app/
+# copy all content from local folder to working directory of image
+# install required dependencies
+COPY ./requirements.txt ./backend/requirements.txt
+RUN cd backend && pip3 install -r requirements.txt
+WORKDIR /app/backend
+CMD python3 -m flask --app=server.py run --host=0.0.0.0

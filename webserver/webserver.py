@@ -19,7 +19,7 @@ cursor = connection.cursor()
 sql = 'CREATE TABLE IF NOT EXISTS `dump1090` ( \
     `id` int(11) NOT NULL AUTO_INCREMENT, \
     `reporter` varchar(255) , \
-    `time` varchar(255) , \
+    `time` datetime , \
     `ICAO` varchar(255) , \
     `feet` double(32,6) , \
     `lat` double(32,6) , \
@@ -51,10 +51,11 @@ async def output_stream(quit_event, sub, topic):
             # out_file.close()
 
             # sql solution
+            time = jdata.get("time").replace("T"," ")[:-6]
             sql = ' INSERT INTO `dump1090` (`reporter`,`time`, `ICAO`, \
             `feet`,`lat`, `lon`,`manufacturer`,`aircraft`,`n-number`,`registered`,\
              `annotator`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-            cursor.execute(sql, (jdata.get("reporter"), jdata.get("time"), jdata.get("ICAO"),
+            cursor.execute(sql, (jdata.get("reporter"), time, jdata.get("ICAO"),
             jdata.get("feet"), jdata.get("lat"),jdata.get("lon"),jdata.get("manufacturer"),
             jdata.get("aircraft"),jdata.get("n-number"),jdata.get("registered"),jdata.get("annotator")))
             connection.commit()
