@@ -2,6 +2,13 @@
 
 This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
 
+# Changes & Deploy 
+
+1. changes md file and directory structure at `/docs-website` at **branch docs**.
+2. use `yarn start` to test it locally
+3. use `USE_SSH=true yarn deploy` to deploy it
+4. push your change to **branch docs** as well.
+
 ### Installation
 
 ```
