@@ -3,18 +3,22 @@ import json
 import os 
 import pymysql
 from flask_cors import CORS
+from flask_crontab import Crontab
+from datetime import datetime, timedelta, timezone
+
 
 from os.path import isfile,join
 app = Flask(__name__)
+crontab = Crontab(app)
 CORS(app)
 
 connection = pymysql.connect(host='ec2-35-80-21-70.us-west-2.compute.amazonaws.com',
                              user='sahai',
                              password='sahai',
                              database='webserver',
+                             connect_timeout=31536000,
                              cursorclass=pymysql.cursors.DictCursor)
 connection.ping(reconnect=True)
-
 
 @app.route('/')
 @app.route('/hello')
@@ -45,3 +49,19 @@ def get_stream_page():
 @app.route('/getJsonStream')
 def get_stream_json():
     return get_stream()
+
+
+@crontab.job()
+def retention():
+    timezone_offset = -8.0  
+    tzinfo = timezone(timedelta(hours=timezone_offset))
+    now = datetime.now(tzinfo)
+    retention_time =  (now -  timedelta(days=20)).strftime("%Y-%m-%d %H:%M:%S.000000")
+    print(f"data in rentntion before {retention_time}")
+    cursor = connection.cursor()
+    sql = ' DELETE FROM dump1090 \
+            WHERE time <= (%s)'
+    cursor.execute(sql,(retention_time))
+    connection.commit() # Make sure the query is re-executed every time
+    
+    

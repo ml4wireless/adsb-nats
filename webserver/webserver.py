@@ -13,6 +13,7 @@ connection = pymysql.connect(host='ec2-35-80-21-70.us-west-2.compute.amazonaws.c
                              user='sahai',
                              password='sahai',
                              database='webserver',
+                             connect_timeout=31536000,
                              cursorclass=pymysql.cursors.DictCursor)
 
 cursor = connection.cursor()
@@ -40,7 +41,6 @@ async def output_stream(quit_event, sub, topic):
             msg = await sub.next_msg()
             data = msg.data.decode("utf-8")
             jdata = json.loads(data)
-            await msg.ack()
             print(f'{msg.subject}: get annotated data at {jdata.get("time")}')
             # file solution
             # path = "annotated_data"
@@ -59,8 +59,9 @@ async def output_stream(quit_event, sub, topic):
             jdata.get("feet"), jdata.get("lat"),jdata.get("lon"),jdata.get("manufacturer"),
             jdata.get("aircraft"),jdata.get("n-number"),jdata.get("registered"),jdata.get("annotator")))
             connection.commit()
+            await msg.ack()
         except TimeoutError:
-            print(f"Receive timeout on {topic}")
+            pass
         except (JSONDecodeError,AttributeError):
             print("An unexcepted JSON Format")
             print("Error data is:", data)
