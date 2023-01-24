@@ -27,6 +27,8 @@ def hello_world(user=None):
     return "Please access /getStream"
 
 def get_stream():
+    if not connection.open:
+        connection.ping(reconnect=True)  # reconnecting mysql
     start_date = request.args.get('start_date','0000-00-00 00:00:00.000000')
     end_date = request.args.get('end_date','9999-12-31 23:59:59.000000')
     cursor = connection.cursor()
@@ -53,6 +55,8 @@ def get_stream_json():
 
 @crontab.job()
 def retention():
+    if not connection.open:
+        connection.ping(reconnect=True)  # reconnecting mysql
     timezone_offset = -8.0  
     tzinfo = timezone(timedelta(hours=timezone_offset))
     now = datetime.now(tzinfo)

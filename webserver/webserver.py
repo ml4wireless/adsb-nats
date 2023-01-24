@@ -42,13 +42,6 @@ async def output_stream(quit_event, sub, topic):
             data = msg.data.decode("utf-8")
             jdata = json.loads(data)
             print(f'{msg.subject}: get annotated data at {jdata.get("time")}')
-            # file solution
-            # path = "annotated_data"
-            # if not os.path.exists(path):
-            #     os.makedirs(path)
-            # out_file = open(f'annotated_data/annotated_{jdata["ICAO"]}_{jdata["time"]}.json', "w")
-            # json.dump(jdata, out_file, indent = 4)
-            # out_file.close()
 
             # sql solution
             time = jdata.get("time").replace("T"," ")[:-6]
@@ -101,9 +94,8 @@ async def main():
     print("Connect to NATS")
     nc = await nats.connect(f"nats://{token}@{nats_host}")
     print("Create JetStream if not exists")
-
-
     js = nc.jetstream()
+    # Adding a stream is an idempotent function
     await js.add_stream(name="planes", subjects=["plane.>"])
     try:
         # Optionally increase parallelization by adding copies of the functions to the gather
