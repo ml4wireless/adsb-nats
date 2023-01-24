@@ -21,8 +21,6 @@ connection = pymysql.connect(host='ec2-35-80-21-70.us-west-2.compute.amazonaws.c
 connection.ping(reconnect=True)
 
 @app.route('/')
-@app.route('/hello')
-@app.route('/hello/<user>')
 def hello_world(user=None):
     return "Please access /getStream"
 
