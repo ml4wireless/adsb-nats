@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import axios from 'axios';
 import mapboxgl from '!mapbox-gl';
 
-mapboxgl.accessToken = '';
+mapboxgl.accessToken = 'pk.eyJ1IjoiemppYW5nMzMwIiwiYSI6ImNsOXhhdzhiMDA4eG8zb21qbHkwbXdrdTcifQ.LGmuZP4-Pekk3ht0JuU6oQ';
 
 const App = () => {
   const mapContainerRef = useRef(null);
@@ -11,7 +11,8 @@ const App = () => {
   const [colorMap, setColorMap] = useState(new Map());
 
   useEffect(() => {
-    axios.get('https://cors-everywhere.herokuapp.com/http://ec2-35-80-21-70.us-west-2.compute.amazonaws.com:5000/getJsonStream')
+    setInterval(() => {
+      axios.get('https://cors-everywhere.herokuapp.com/http://ec2-35-80-21-70.us-west-2.compute.amazonaws.com:5000/getJsonStream')
       .then(res => {
         let data = res.data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
         setData(data);
@@ -62,7 +63,8 @@ const App = () => {
         // Clean up on unmount
         return () => map.remove(); 
       })
-  }, [])
+    }, 60000)
+  }, [data])
 
   return <div className="map-container" ref={mapContainerRef} />;
 };

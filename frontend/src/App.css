@@ -19,5 +19,6 @@
     border-radius: 50%;
     width: 2px;
     height: 2px;
+    content: "\2708";
   }
   
