@@ -1,3 +1,6 @@
+---
+sidebar_position: 4
+---
 # Dashboards - Prometheus & Grafana
 
 [Dashboards](https://www.notion.so/Dashboards-200c259edbda441bb8b9a80d56f28849)

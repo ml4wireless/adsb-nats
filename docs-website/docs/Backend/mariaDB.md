@@ -1,6 +1,6 @@
 # Database
 
-## Context:
+## Context
 
 We’re using Amazon Linux 2 AMI as our EC2 Image, which recommend MariaDB as a subsititution  for MySQL. Actually, MariaDB is a AWS-adopted MySQL-compatible database.  
 
