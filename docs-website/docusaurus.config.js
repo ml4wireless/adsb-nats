@@ -10,7 +10,7 @@ const config = {
   // tagline: 'Dinosaurs are cool',
   url: 'https://ml4wireless.github.io/',
   baseUrl: '/adsb-nats/',
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
 

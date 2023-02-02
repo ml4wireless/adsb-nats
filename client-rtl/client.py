@@ -2,14 +2,9 @@
 import os
 import asyncio
 import nats
-from nats.errors import ConnectionClosedError, TimeoutError, NoServersError
 
 import sys
-import subprocess
 import re
-import math
-import time
-import sqlite3 as lite
 import getopt
 import json
 import os.path
@@ -20,9 +15,7 @@ import datetime
 import geocoder
 import uuid
 
-from pprint import pprint
-from datetime import datetime, date
-from subprocess import call
+from datetime import datetime
 
 cDump1090 = "/usr/local/bin/dump1090"
 playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
