@@ -28,7 +28,7 @@ cDump1090 = "/usr/local/bin/dump1090"
 playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
 playback_file = ""
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
-
+print("Connecting to NATS @", nats_host)
 
 def formNumber(pInputText):
     try:
