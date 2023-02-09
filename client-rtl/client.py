@@ -24,7 +24,7 @@ from pprint import pprint
 from datetime import datetime, date
 from subprocess import call
 
-cDump1090 = "/usr/local/bin/dump1090"
+cDump1090 = "./dump1090 --device-type airspy --mlat"
 playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
 playback_file = ""
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
@@ -149,18 +149,22 @@ async def getdump(q):
                 print("Error openning RTLSDR:", textblock)
                 return
 
+            if "airspy_open failed" in textblock:
+                print("Error opening Airspy:", textblock)
+                return
+
             if len(line) == 1:
-                # Start of block of info
+                # End(?) of block of info
                 searchICAO = re.search(
-                    r'(ICAO Address   : )(.*$)', textblock, re.M | re.I)
+                    r'(ICAO Address   :\s+|ICAO Address:\s+)([\w\d]+)( \(Mode S / ADS-B\))?$', textblock, re.M | re.I)
                 searchFeet = re.search(
-                    r'(Altitude : )(.*)(feet)(.*$)', textblock, re.M | re.I)
+                    r'(Altitude :\s+|Baro altitude:\s+)([\d.]+)( feet| ft)(.*$)', textblock, re.M | re.I)
                 searchLatitude = re.search(
-                    r'(Latitude : )(.*$)', textblock, re.M | re.I)
+                    r'(Latitude :\s+|CPR latitude:\s+)([\d.-]+)( \(\d+\))?$', textblock, re.M | re.I)
                 searchLongitude = re.search(
-                    r'(Longitude: )(.*$)', textblock, re.M | re.I)
+                    r'(Longitude:\s+|CPR longitude:\s+)([\d.-]+)( \(\d+\))?$', textblock, re.M | re.I)
                 searchIdent = re.search(
-                    r'(Identification : )(.*$)', textblock, re.M | re.I)
+                    r'(Identification :\s+|Ident:\s+)(.*$)', textblock, re.M | re.I)
                 textblock = ''
 
                 if searchICAO and searchIdent:
