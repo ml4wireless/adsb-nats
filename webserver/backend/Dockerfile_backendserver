@@ -7,4 +7,4 @@ COPY ./requirements.txt ./backend/requirements.txt
 RUN cd backend && pip3 install -r requirements.txt
 RUN apt-get update && apt-get install cron -y
 WORKDIR /app/backend
-CMD python3 -m flask --app=server.py run --host=0.0.0.0 
+CMD python3 -m flask --app=server.py run --host=0.0.0.0 --port=443 --cert=adhoc

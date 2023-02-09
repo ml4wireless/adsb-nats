@@ -7,4 +7,5 @@ docker run -d --privileged \
        -e TOKEN=${TOKEN} \
        -v $(pwd):/app/webserver \
        --network "host" \
+       --name "webserver" \
        webserver:latest
