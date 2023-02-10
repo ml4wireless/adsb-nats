@@ -24,10 +24,19 @@ from pprint import pprint
 from datetime import datetime, date
 from subprocess import call
 
+
 cDump1090 = "/usr/local/bin/dump1090 --mlat"
-cDump1090Device = ""
+# Device choice
+use_airspy = os.environ.get("USE_AIRSPY", False)
+try:
+    use_airspy = int(use_airspy)
+except ValueError:
+    use_airspy = use_airspy == "yes" or use_airspy=="y" or use_airspy == "true"
+cDump1090Device = " --device-type airspy" if use_airspy else ""
+# File playback
 playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
 playback_file = ""
+# NATS connection
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
 
 
@@ -151,11 +160,11 @@ async def getdump(q):
             textblock = textblock + line
 #            logmsg(f"Read {line}")
             if "Error opening the RTLSDR device" in textblock:
-                print("Error openning RTLSDR:", textblock)
+                logmsg("Error openning RTLSDR:\n" + textblock)
                 return
 
             if "airspy_open failed" in textblock:
-                print("Error opening Airspy:", textblock)
+                logmsg("Error opening Airspy:\n" + textblock)
                 return
 
             if len(line) == 1:

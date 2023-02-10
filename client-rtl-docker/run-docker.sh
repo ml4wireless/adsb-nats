@@ -8,5 +8,6 @@ export NATS_TOKEN=${NATS_TOKEN:-"sahai"}
 docker run -it --privileged -v /dev/bus/usb/dev/bus/usb \
        -e NATS_HOST=${NATS_HOST} \
        -e NATS_TOKEN=${NATS_TOKEN} \
+       -e USE_AIRSPY=0 \
        --network=bridge \
        adsb-nats-client:latest 
