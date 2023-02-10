@@ -24,7 +24,8 @@ from pprint import pprint
 from datetime import datetime, date
 from subprocess import call
 
-cDump1090 = "/usr/local/bin/dump1090"
+cDump1090 = "/usr/local/bin/dump1090 --mlat"
+cDump1090Device = ""
 playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
 playback_file = ""
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
@@ -133,7 +134,7 @@ async def getdump(q):
     os.system("killall dump1090")
     logmsg("create subprocess")
     if not playback_file:
-        sproc = await asyncio.create_subprocess_shell(cDump1090,
+        sproc = await asyncio.create_subprocess_shell(cDump1090 + cDump1090Device,
                                                       stdout=asyncio.subprocess.PIPE,
                                                       stderr=asyncio.subprocess.STDOUT)
     else:
@@ -150,21 +151,25 @@ async def getdump(q):
             textblock = textblock + line
 #            logmsg(f"Read {line}")
             if "Error opening the RTLSDR device" in textblock:
-                logmsg("Error openning RTLSDR:", textblock)
+                print("Error openning RTLSDR:", textblock)
+                return
+
+            if "airspy_open failed" in textblock:
+                print("Error opening Airspy:", textblock)
                 return
 
             if len(line) == 1:
-                # Start of block of info
+                # End(?) of block of info
                 searchICAO = re.search(
-                    r'(ICAO Address   : )(.*$)', textblock, re.M | re.I)
+                    r'(ICAO Address   :\s+|ICAO Address:\s+)([\w\d]+)( \(Mode S / ADS-B\))?$', textblock, re.M | re.I)
                 searchFeet = re.search(
-                    r'(Altitude : )(.*)(feet)(.*$)', textblock, re.M | re.I)
+                    r'(Altitude :\s+|Baro altitude:\s+)([\d.]+)( feet| ft)(.*$)', textblock, re.M | re.I)
                 searchLatitude = re.search(
-                    r'(Latitude : )(.*$)', textblock, re.M | re.I)
+                    r'(Latitude :\s+|CPR latitude:\s+)([\d.-]+)( \(\d+\))?$', textblock, re.M | re.I)
                 searchLongitude = re.search(
-                    r'(Longitude: )(.*$)', textblock, re.M | re.I)
+                    r'(Longitude:\s+|CPR longitude:\s+)([\d.-]+)( \(\d+\))?$', textblock, re.M | re.I)
                 searchIdent = re.search(
-                    r'(Identification : )(.*$)', textblock, re.M | re.I)
+                    r'(Identification :\s+|Ident:\s+)(.*$)', textblock, re.M | re.I)
                 textblock = ''
 
                 if searchICAO and searchIdent:
@@ -188,7 +193,7 @@ async def getdump(q):
                     await q.put((valICAO, valFeet, valLatitude, valLongitude))
 
     except KeyboardInterrupt:
-        logmsg(f"Killing {cDump1090}/{playback1090} process: {sproc.pid}")
+        logmsg(f"Killing {cDump1090}{cDump1090Device}/{playback1090} process: {sproc.pid}")
         sproc.kill()
 
 
@@ -199,9 +204,9 @@ vDebugMode = 0
 vSnapMode = 0
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "sda:b:f:", ["verbose", "debug=", "playback-file="])
+    opts, args = getopt.getopt(sys.argv[1:], "vd:af:", ["verbose", "debug=", "airspy", "playback-file="])
 except getopt.GetoptError:
-    logmsg('plane-kafka.py [-v|--verbose] [-d XX|--debug=] [-f|--playback-file=]')
+    logmsg('plane-kafka.py [-v|--verbose] [-d XX|--debug=] [-f|--playback-file=] [-a|--airspy]')
     sys.exit(2)
 for opt, arg in opts:
     if opt in ('-d', '--debug'):
@@ -212,6 +217,8 @@ for opt, arg in opts:
             sys.exit(2)
     elif opt in ('-v', '--verbose'):
         vVerboseMode = 1
+    elif opt in ('-a', '--airspy'):
+        cDump1090Device = " --device-type airspy"
     elif opt in ('-f', '--playback-file'):
         playback_file = arg
         if not os.path.isfile(playback_file):
