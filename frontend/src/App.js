@@ -2,7 +2,9 @@ import './App.css';
 import React, { useRef, useEffect, useState } from 'react';
 import axios from 'axios';
 import mapboxgl from '!mapbox-gl';
-import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker'
+import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiemppYW5nMzMwIiwiYSI6ImNsOXhhdzhiMDA4eG8zb21qbHkwbXdrdTcifQ.LGmuZP4-Pekk3ht0JuU6oQ';
 // look aa past 30 seconds
@@ -118,17 +120,39 @@ const App = () => {
     getFlightRequest(url);
   }
 
-
-  useEffect(() => {
-    if (map.current) return;
+  const renderMap = (longitude, latitude) => {
     map.current = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v11",
-      center: [-122.3, 37.8],
+      center: [longitude, latitude],
       zoom: 9,
     });
+    map.current.addControl(new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl: mapboxgl,
+      language: "en-EN",
+    }), "top-right");
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
     getFlightData();
+  }
+
+
+  useEffect(() => {
+    if (map.current) return;
+
+    var longitude = -122.3;
+    var latitude = 37.8;
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        longitude = position.coords.longitude;
+        latitude = position.coords.latitude;
+        renderMap(longitude, latitude);
+      });
+    } else {
+      console.log("Geolocation not supported by the browser");
+      renderMap(longitude, latitude);
+    }
   }, [])
 
   useEffect(() => {

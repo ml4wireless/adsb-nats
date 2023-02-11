@@ -21,6 +21,10 @@
   height: 800px;
 }
 
+.mapboxgl-ctrl-geocoder {
+  width: 275px!important;
+}
+
 .marker {
     /* border: 1px solid black; */
     color: white;
