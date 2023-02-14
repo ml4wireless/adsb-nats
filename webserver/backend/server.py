@@ -5,9 +5,8 @@ import pymysql
 from flask_cors import CORS
 from flask_crontab import Crontab
 from datetime import datetime, timedelta, timezone
-
-
 from os.path import isfile,join
+
 app = Flask(__name__)
 crontab = Crontab(app)
 CORS(app)
@@ -58,7 +57,7 @@ def retention():
     timezone_offset = -8.0  
     tzinfo = timezone(timedelta(hours=timezone_offset))
     now = datetime.now(tzinfo)
-    retention_time =  (now -  timedelta(days=20)).strftime("%Y-%m-%d %H:%M:%S.000000")
+    retention_time =  (now -  timedelta(days=retention_day)).strftime("%Y-%m-%d %H:%M:%S.000000")
     print(f"data in rentntion before {retention_time}")
     cursor = connection.cursor()
     sql = ' DELETE FROM dump1090 \
