@@ -22,32 +22,12 @@ playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
 playback_file = ""
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
 
-
-def formNumber(pInputText):
-    try:
-        return float(pInputText.replace('\r', ''))
-    except:
-        return float(0)
-
-
-def formText(pInputText):
-    return pInputText.replace('\r', '')
-
-
-def printStuff(pText):
-    print("{:%Y%m%d %H:%M:%S} {}".format(datetime.now(), pText))
-
+print("Connecting to NATS @", nats_host)
 
 ################################################################################
 # Setup
 vDebugMode = 0
 vSnapMode = 0
-
-
-def timestamp():
-    now = datetime.now(pytz.timezone('UTC'))
-    return now.isoformat()
-
 
 async def consumer(q):
 

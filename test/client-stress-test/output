@@ -1,0 +1,16 @@
+time stamp is  2022-12-08T01:50:11.800121+00:00
+20221207 17:50:11 begin
+reporter is 00000000-0000-0000-0000-3e22fb97bebc
+Connect to NATS
+Create jetstream
+Create stream
+0.00 it / s
+796.02 it / s
+775.23 it / s
+761.61 it / s
+777.37 it / s
+786.77 it / s
+787.47 it / s
+781.84 it / s
+784.43 it / s
+786.32 it / s
