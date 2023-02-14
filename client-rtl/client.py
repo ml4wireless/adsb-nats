@@ -23,38 +23,19 @@ import uuid
 from pprint import pprint
 from datetime import datetime, date
 from subprocess import call
+from utils import *
 
 cDump1090 = "/usr/local/bin/dump1090"
 playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
 playback_file = ""
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
+
 print("Connecting to NATS @", nats_host)
-
-def formNumber(pInputText):
-    try:
-        return float(pInputText.replace('\r', ''))
-    except:
-        return float(0)
-
-
-def formText(pInputText):
-    return pInputText.replace('\r', '')
-
-
-def printStuff(pText):
-    print("{:%Y%m%d %H:%M:%S} {}".format(datetime.now(), pText))
-
 
 ################################################################################
 # Setup
 vDebugMode = 0
 vSnapMode = 0
-
-
-def timestamp():
-    now = datetime.now(pytz.timezone('UTC'))
-    return now.isoformat()
-
 
 async def consumer(q):
 
