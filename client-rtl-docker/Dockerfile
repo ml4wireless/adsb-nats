@@ -34,9 +34,9 @@ RUN  pip3 install nats-py pytz geocoder
 WORKDIR /app
 COPY ./client.py /app/client.py
 COPY ./utils.py /app/utils.py
+
+# for recorded data option
 COPY ./playback-dump1090.py /app/playback-dump1090.py
 COPY ./dump1090_recording.txt /app/dump1090_recording.txt
 
-# CMD python3 /app/client.py -f dump1090_recording.txt
 CMD python3 /app/client.py
-

@@ -18,10 +18,34 @@ import uuid
 from datetime import datetime
 from utils import *
 
-cDump1090 = "/usr/local/bin/dump1090"
+# cDump1090 = "/usr/local/bin/dump1090"
+# playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
+# playback_file = ""
+# nats_host = os.getenv("NATS_HOST", "localhost:30303")
+
+###### airspy compatibility ######
+cDump1090 = "/usr/local/bin/dump1090 --mlat"
+# Device choice
+use_airspy = os.environ.get("USE_AIRSPY", False)
+try:
+    use_airspy = int(use_airspy)
+except ValueError:
+    use_airspy = use_airspy == "yes" or use_airspy=="y" or use_airspy == "true"
+cDump1090Device = " --device-type airspy" if use_airspy else ""
+# File playback
 playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
 playback_file = ""
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
+######
+
+##### handle option to use recorded data for debugging #####
+use_recorded_data = os.environ.get("USE_RECORDED_DATA", False)
+try:
+    use_recorded_data = int(use_recorded_data)
+except ValueError:
+    use_recorded_data = use_recorded_data == "yes" or use_recorded_data=="y" or use_recorded_data == "true"
+playback_file = "dump1090_recording.txt" if use_recorded_data else ""
+#############################################################
 
 print("Connecting to NATS @", nats_host)
 
