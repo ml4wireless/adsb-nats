@@ -33,10 +33,10 @@ RUN  pip3 install nats-py pytz geocoder
 
 WORKDIR /app
 COPY ./client.py /app/client.py
+COPY ./utils.py /app/utils.py
 COPY ./playback-dump1090.py /app/playback-dump1090.py
-# COPY ./dump1090_recording.txt /app/dump1090_recording.txt
+COPY ./dump1090_recording.txt /app/dump1090_recording.txt
 
-CMD python3 /app/client.py 
-# -f dump1090_recording.txt
-# CMD nats sub -s nats://sahai@a15d11836d0644f6da0d09cbd81fae4f-949e37ea0352e6ad.elb.us-west-2.amazonaws.com:4222 "plane.>"
-# CMD /usr/local/bin/dump1090
+# CMD python3 /app/client.py -f dump1090_recording.txt
+CMD python3 /app/client.py
+
