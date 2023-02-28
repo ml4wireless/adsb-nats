@@ -119,7 +119,7 @@ async def main(master, aircraft):
     # Create JetStream context in case it's not defined
     print("Create JetStream")
     js = nc.jetstream()
-    await js.add_stream(name="planes", subjects=["plane.>"])
+    await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=10000000)
 
     try:
         # Optionally increase parallelization by adding copies of the functions to the gather
