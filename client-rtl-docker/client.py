@@ -50,7 +50,9 @@ async def consumer(q):
             js = nc.jetstream()
             print("Create stream")
 
-            await js.add_stream(name="planes", subjects=["plane.>"])
+            # await js.add_stream(name="planes", subjects=["plane.>"])
+            # change jestream to this in order to set maximum messages
+            await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=10000000)
 
             mygeo = geocoder.ip('me')
             mylat, mylong = mygeo.latlng
