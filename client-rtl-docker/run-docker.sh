@@ -9,5 +9,6 @@ docker run -it --privileged -v /dev/bus/usb/dev/bus/usb \
        -e NATS_HOST=${NATS_HOST} \
        -e NATS_TOKEN=${NATS_TOKEN} \
        -e USE_AIRSPY=0 \
+       -e USE_RECORDED_DATA=0 \
        --network=bridge \
        adsb-nats-client:latest 
