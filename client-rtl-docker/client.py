@@ -18,10 +18,42 @@ import uuid
 from datetime import datetime
 from utils import *
 
-cDump1090 = "/usr/local/bin/dump1090"
+
+cDump1090 = "/usr/local/bin/dump1090 --mlat"
+# Device choice
+use_airspy = os.environ.get("USE_AIRSPY", False)
+try:
+    use_airspy = int(use_airspy)
+except ValueError:
+    use_airspy = use_airspy == "yes" or use_airspy=="y" or use_airspy == "true"
+cDump1090Device = " --device-type airspy" if use_airspy else ""
+
+# File playback
 playback1090 = "python3 playback-dump1090.py -r 0.1 -f {}"
-playback_file = ""
+use_recorded_data = os.environ.get("USE_RECORDED_DATA", False)
+try:
+    use_recorded_data = int(use_recorded_data)
+except ValueError:
+    use_recorded_data = use_recorded_data == "yes" or use_recorded_data=="y" or use_recorded_data == "true"
+playback_file = "dump1090_recording.txt" if use_recorded_data else ""
+
+# NATS connection
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
+
+def formNumber(pInputText):
+    try:
+        return float(pInputText.replace('\r', ''))
+    except:
+        return float(0)
+
+
+def formText(pInputText):
+    return pInputText.replace('\r', '')
+
+
+def logmsg(pText):
+    print("{:%Y%m%d %H:%M:%S} {}".format(datetime.now(), pText))
+    sys.stdout.flush()
 
 print("Connecting to NATS @", nats_host)
 
@@ -36,25 +68,29 @@ async def consumer(q):
         sub = None
         nc = None
         reporter_id = str(uuid.UUID(int=uuid.getnode()))
-        print(f"reporter is {reporter_id}")
+        logmsg(f"reporter is {reporter_id}")
         try:
-            print("Connect to NATS")
-            token = os.getenv("TOKEN")
+            logmsg("Connect to NATS")
+            token = os.getenv("NATS_TOKEN")
             if not token:
-                print(
+                logmsg(
                     "You need to set the TOKEN environment variable to your NATS token")
                 sys.exit(1)
 
+            logmsg(f"connect to nats://{token}@{nats_host}")
+            sys.stdout.flush()
             nc = await nats.connect(f"nats://{token}@{nats_host}")
-            print("Create jetstream")
+            logmsg("Create jetstream")
             js = nc.jetstream()
-            print("Create stream")
+            logmsg("Create stream")
 
-            await js.add_stream(name="planes", subjects=["plane.>"])
+            # await js.add_stream(name="planes", subjects=["plane.>"])
+            # change jestream to this in order to set maximum messages
+            await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=10000000)
 
             mygeo = geocoder.ip('me')
             mylat, mylong = mygeo.latlng
-            print(f"got {mylat}, {mylong}")
+            logmsg(f"got {mylat}, {mylong}")
 
             jdata = json.dumps({
                 'reporter': reporter_id,
@@ -62,13 +98,13 @@ async def consumer(q):
                 'lat': mylat,
                 'long': mylong
             })
-            print(f"Introduce reporter location as {jdata}")
+            logmsg(f"Introduce reporter location as {jdata}")
             await nc.publish("plane.reporter", jdata.encode())
 
             while True:
-                print("consumer waiting at queue")
+                logmsg("consumer waiting at queue")
                 data = await q.get()
-                print("data is", data)
+                logmsg(f"data is {data}")
 
                 if len(data) == 4:
                     jdata = json.dumps({
@@ -78,7 +114,7 @@ async def consumer(q):
                         "feet": data[1],
                         "lat": data[2],
                         "lon": data[3]})
-                    print(f"publish location {jdata}")
+                    logmsg(f"publish location {jdata}")
                     await nc.publish("plane.loc", jdata.encode())
 
                 elif len(data) == 2:
@@ -87,7 +123,7 @@ async def consumer(q):
                         'time': timestamp(),
                         "ICAO": data[0],
                         "ident": data[1]})
-                    print(f"publish ident {jdata}")
+                    logmsg(f"publish ident {jdata}")
                     await nc.publish("plane.ident", jdata.encode())
                 sys.stdout.flush()
                 q.task_done()
@@ -100,11 +136,11 @@ async def consumer(q):
 
 async def getdump(q):
     # Create ADS-B detection process
-    print("Kill old dump1090")
+    logmsg("Kill old dump1090")
     os.system("killall dump1090")
-    print("create subprocess")
+    logmsg("create subprocess")
     if not playback_file:
-        sproc = await asyncio.create_subprocess_shell(cDump1090,
+        sproc = await asyncio.create_subprocess_shell(cDump1090 + cDump1090Device,
                                                       stdout=asyncio.subprocess.PIPE,
                                                       stderr=asyncio.subprocess.STDOUT)
     else:
@@ -117,30 +153,35 @@ async def getdump(q):
         textblock = ''
         while True:
             line = await sproc.stdout.readline()
-            textblock = textblock + line.decode("utf-8")
-
+            line = line.decode("utf-8")
+            textblock = textblock + line
+#            logmsg(f"Read {line}")
             if "Error opening the RTLSDR device" in textblock:
-                print("Error openning RTLSDR:", textblock)
+                logmsg("Error openning RTLSDR:\n" + textblock)
+                return
+
+            if "airspy_open failed" in textblock:
+                logmsg("Error opening Airspy:\n" + textblock)
                 return
 
             if len(line) == 1:
-                # Start of block of info
+                # End(?) of block of info
                 searchICAO = re.search(
-                    r'(ICAO Address   : )(.*$)', textblock, re.M | re.I)
+                    r'(ICAO Address   :\s+|ICAO Address:\s+)([\w\d]+)( \(Mode S / ADS-B\))?$', textblock, re.M | re.I)
                 searchFeet = re.search(
-                    r'(Altitude : )(.*)(feet)(.*$)', textblock, re.M | re.I)
+                    r'(Altitude :\s+|Baro altitude:\s+)([\d.]+)( feet| ft)(.*$)', textblock, re.M | re.I)
                 searchLatitude = re.search(
-                    r'(Latitude : )(.*$)', textblock, re.M | re.I)
+                    r'(Latitude :\s+|CPR latitude:\s+)([\d.-]+)( \(\d+\))?$', textblock, re.M | re.I)
                 searchLongitude = re.search(
-                    r'(Longitude: )(.*$)', textblock, re.M | re.I)
+                    r'(Longitude:\s+|CPR longitude:\s+)([\d.-]+)( \(\d+\))?$', textblock, re.M | re.I)
                 searchIdent = re.search(
-                    r'(Identification : )(.*$)', textblock, re.M | re.I)
+                    r'(Identification :\s+|Ident:\s+)(.*$)', textblock, re.M | re.I)
                 textblock = ''
 
                 if searchICAO and searchIdent:
                     valICAO = formText(searchICAO.group(2))
                     valIdent = formText(searchIdent.group(2)).strip()
-                    printStuff(f"valICAO:{valICAO} valIdent:{valIdent}")
+                    logmsg(f"valICAO:{valICAO} valIdent:{valIdent}")
                     await q.put((valICAO, valIdent))
 
                 if searchFeet and searchICAO \
@@ -153,12 +194,12 @@ async def getdump(q):
                     valFeet = formNumber(searchFeet.group(2))
                     valLatitude = formNumber(searchLatitude.group(2))
                     valLongitude = formNumber(searchLongitude.group(2))
-                    printStuff(
+                    logmsg(
                         f"ICAO:{valICAO} Feet:{valFeet} Latitude:{valLatitude} Longitude:{valLongitude}")
                     await q.put((valICAO, valFeet, valLatitude, valLongitude))
 
     except KeyboardInterrupt:
-        print(f"Killing {cDump1090}/{playback1090} process: {sproc.pid}")
+        logmsg(f"Killing {cDump1090}{cDump1090Device}/{playback1090} process: {sproc.pid}")
         sproc.kill()
 
 
@@ -169,23 +210,25 @@ vDebugMode = 0
 vSnapMode = 0
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "sda:b:f:", ["verbose", "debug=", "playback-file="])
+    opts, args = getopt.getopt(sys.argv[1:], "vd:af:", ["verbose", "debug=", "airspy", "playback-file="])
 except getopt.GetoptError:
-    print('plane-kafka.py [-v|--verbose] [-d XX|--debug=] [-f|--playback-file=]')
+    logmsg('plane-kafka.py [-v|--verbose] [-d XX|--debug=] [-f|--playback-file=] [-a|--airspy]')
     sys.exit(2)
 for opt, arg in opts:
     if opt in ('-d', '--debug'):
         vDebugMode = 1
         vDebugFile = arg
         if not os.path.isfile(vDebugFile):
-            print("File {} does not exist".format(vDebugFile))
+            logmsg("File {} does not exist".format(vDebugFile))
             sys.exit(2)
     elif opt in ('-v', '--verbose'):
         vVerboseMode = 1
+    elif opt in ('-a', '--airspy'):
+        cDump1090Device = " --device-type airspy"
     elif opt in ('-f', '--playback-file'):
         playback_file = arg
         if not os.path.isfile(playback_file):
-            print("File {} does not exist".format(playback_file))
+            logmsg("File {} does not exist".format(playback_file))
             sys.exit(2)
 
 
@@ -198,5 +241,5 @@ async def main():
 
 
 if __name__ == '__main__':
-    print("time stamp is ", timestamp())
+    logmsg(f"time stamp is {timestamp()}")
     asyncio.run(main())
