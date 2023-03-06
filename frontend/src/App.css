@@ -1,0 +1,47 @@
+.App {
+  text-align: center;
+}
+
+.container {
+  position: relative;
+}
+
+.form {
+  position: absolute;
+  z-index: 5;
+  top: 10px;
+  left: 10px;
+}
+
+.bg-w {
+  background-color: white;
+}
+
+.map-container {
+  height: 800px;
+}
+
+.mapboxgl-ctrl-geocoder {
+  width: 275px!important;
+}
+
+.marker {
+    /* border: 1px solid black; */
+    color: white;
+    padding: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 6px;
+    margin: 4px 2px;
+    border-radius: 50%;
+    width: 4px;
+    height: 4px;
+    content: "\2708";
+    /* background-image: url(https://cdn-icons-png.flaticon.com/512/0/614.png); */
+    background-image: url(https://static.vecteezy.com/system/resources/previews/014/455/865/original/plane-icon-icon-on-transparent-background-free-png.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+  

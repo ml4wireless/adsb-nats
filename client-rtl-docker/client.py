@@ -2,14 +2,9 @@
 import os
 import asyncio
 import nats
-from nats.errors import ConnectionClosedError, TimeoutError, NoServersError
 
 import sys
-import subprocess
 import re
-import math
-import time
-import sqlite3 as lite
 import getopt
 import json
 import os.path
@@ -20,9 +15,8 @@ import datetime
 import geocoder
 import uuid
 
-from pprint import pprint
-from datetime import datetime, date
-from subprocess import call
+from datetime import datetime
+from utils import *
 
 
 cDump1090 = "/usr/local/bin/dump1090 --mlat"
@@ -46,7 +40,6 @@ playback_file = "dump1090_recording.txt" if use_recorded_data else ""
 # NATS connection
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
 
-
 def formNumber(pInputText):
     try:
         return float(pInputText.replace('\r', ''))
@@ -62,17 +55,12 @@ def logmsg(pText):
     print("{:%Y%m%d %H:%M:%S} {}".format(datetime.now(), pText))
     sys.stdout.flush()
 
+print("Connecting to NATS @", nats_host)
 
 ################################################################################
 # Setup
 vDebugMode = 0
 vSnapMode = 0
-
-
-def timestamp():
-    now = datetime.now(pytz.timezone('UTC'))
-    return now.isoformat()
-
 
 async def consumer(q):
 

@@ -1,0 +1,9 @@
+FROM python:3.8-slim-buster
+# set working directory
+WORKDIR /app/
+# copy all content from local folder to working directory of image
+# install required dependencies
+COPY ./requirements.txt ./webserver/requirements.txt
+RUN cd webserver && pip3 install -r requirements.txt
+WORKDIR /app/webserver
+CMD python3 ./webserver.py
