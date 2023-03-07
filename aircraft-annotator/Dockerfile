@@ -1,9 +1,11 @@
-FROM python:3.8.5-slim-buster
+FROM python:3.8-slim-buster
 
-COPY . aircraft_annotator 
+WORKDIR /aircraft-annotator/
 
-WORKDIR aircraft_annotator
+COPY . .
 
+# install required dependencies
 RUN pip3 install -r requirements.txt
+RUN pip3 install awscli
 
-CMD python3 annotator.py .
+CMD aws s3 cp s3://aircraft-annotator-data/ReleasableAircraft . --recursive; python3 annotator.py . 
