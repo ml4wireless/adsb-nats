@@ -1,1 +1,0 @@
-retention_day = 2
