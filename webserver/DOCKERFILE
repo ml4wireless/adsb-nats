@@ -1,9 +1,0 @@
-FROM python:3.8-slim-buster
-# set working directory
-WORKDIR /app/
-# copy all content from local folder to working directory of image
-COPY . ./webserver
-# /aircraft-annotator
-# install required dependencies
-RUN cd webserver && pip3 install -r requirements.txt
-CMD python3 ./webserver/webserver.py
