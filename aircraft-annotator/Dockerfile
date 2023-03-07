@@ -8,4 +8,4 @@ COPY . .
 RUN pip3 install -r requirements.txt
 RUN pip3 install awscli
 
-CMD aws s3 cp s3://aircraft-annotator-data/ReleasableAircraft . --recursive; python3 annotator.py .
+CMD ./download_data.sh; python3 annotator.py ./annotator-data
