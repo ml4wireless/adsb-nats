@@ -113,7 +113,7 @@ async def main(master, aircraft):
     if not token:
         print("You need to define TOKEN")
         sys.exit(1)
-    print("Connect to NATS")
+    print("Connect to NATS", f"nats://{token}@{nats_host}")
     nc = await nats.connect(f"nats://{token}@{nats_host}")
 
     # Create JetStream context in case it's not defined
