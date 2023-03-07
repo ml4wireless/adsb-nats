@@ -1,6 +1,7 @@
 import datetime
 from datetime import datetime, date
 import pytz
+import sys
 
 def formNumber(pInputText):
     try:
@@ -19,3 +20,7 @@ def printStuff(pText):
 def timestamp():
     now = datetime.now(pytz.timezone('UTC'))
     return now.isoformat()
+
+def logmsg(pText):
+    print("{:%Y%m%d %H:%M:%S} {}".format(datetime.now(), pText))
+    sys.stdout.flush()
