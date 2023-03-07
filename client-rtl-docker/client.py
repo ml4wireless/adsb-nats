@@ -120,7 +120,7 @@ async def consumer(q):
                 if reporter_loc_cur - reporter_loc_last >= reporter_interval:
                     jdata = json.dumps({
                         'reporter': reporter_id,
-                        'time': reporter_loc_cur,
+                        'time': timestamp(),
                         'lat': mylat,
                         'long': mylong
                     })
