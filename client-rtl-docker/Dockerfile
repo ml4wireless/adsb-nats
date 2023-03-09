@@ -40,3 +40,4 @@ COPY ./playback-dump1090.py /app/playback-dump1090.py
 COPY ./dump1090_recording.txt /app/dump1090_recording.txt
 
 CMD python3 /app/client.py
+# CMD python3 /app/client.py -f /app/dump1090_recording.txt

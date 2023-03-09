@@ -11,6 +11,7 @@ import os.path
 
 import pytz
 import datetime
+import time
 
 import geocoder
 import uuid
@@ -40,20 +41,8 @@ playback_file = "dump1090_recording.txt" if use_recorded_data else ""
 # NATS connection
 nats_host = os.getenv("NATS_HOST", "localhost:30303")
 
-def formNumber(pInputText):
-    try:
-        return float(pInputText.replace('\r', ''))
-    except:
-        return float(0)
-
-
-def formText(pInputText):
-    return pInputText.replace('\r', '')
-
-
-def logmsg(pText):
-    print("{:%Y%m%d %H:%M:%S} {}".format(datetime.now(), pText))
-    sys.stdout.flush()
+# Client status heartbeat interval
+reporter_interval = os.getenv("REPORTER_INTERVAL", 5)
 
 print("Connecting to NATS @", nats_host)
 
@@ -74,7 +63,7 @@ async def consumer(q):
             token = os.getenv("NATS_TOKEN")
             if not token:
                 logmsg(
-                    "You need to set the TOKEN environment variable to your NATS token")
+                    "You need to set the NATS_TOKEN environment variable to your NATS token")
                 sys.exit(1)
 
             logmsg(f"connect to nats://{token}@{nats_host}")
@@ -100,6 +89,7 @@ async def consumer(q):
             })
             logmsg(f"Introduce reporter location as {jdata}")
             await nc.publish("plane.reporter", jdata.encode())
+            reporter_loc_last = time.time()
 
             while True:
                 logmsg("consumer waiting at queue")
@@ -125,6 +115,19 @@ async def consumer(q):
                         "ident": data[1]})
                     logmsg(f"publish ident {jdata}")
                     await nc.publish("plane.ident", jdata.encode())
+                
+                reporter_loc_cur = time.time()
+                if reporter_loc_cur - reporter_loc_last >= reporter_interval:
+                    jdata = json.dumps({
+                        'reporter': reporter_id,
+                        'time': timestamp(),
+                        'lat': mylat,
+                        'long': mylong
+                    })
+                    logmsg(f"publish reporter location as {jdata}")
+                    await nc.publish("plane.reporter", jdata.encode())
+                    reporter_loc_last = reporter_loc_cur
+
                 sys.stdout.flush()
                 q.task_done()
         finally:
