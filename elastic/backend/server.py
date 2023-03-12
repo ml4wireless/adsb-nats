@@ -1,7 +1,11 @@
 from flask import Flask, render_template, request
 import json
 import os 
-import pymysql
+import ssl
+from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import ConnectionError
+import sys
+
 from flask_cors import CORS
 from flask_crontab import Crontab
 from datetime import datetime, timedelta, timezone
@@ -11,34 +15,73 @@ app = Flask(__name__)
 crontab = Crontab(app)
 CORS(app)
 
-connection = pymysql.connect(host='ec2-35-80-21-70.us-west-2.compute.amazonaws.com',
-                             user='sahai',
-                             password='sahai',
-                             database='webserver',
-                             connect_timeout=31536000,
-                             cursorclass=pymysql.cursors.DictCursor)
-connection.ping(reconnect=True)
+elastic_host = os.getenv("ELASTIC_HOST", None)
+elastic_username = os.getenv("ELASTIC_USERNAME", None)
+elastic_password = os.getenv("ELASTIC_PASSWORD", None)
+elastic_cert = os.getenv("ELASTIC_CERT", None)
+
+if not elastic_host or not elastic_username or not elastic_password or not elastic_cert :
+    print("One of the following environmental variable is missing")
+    print("ELASTIC_HOST | ELASTIC_USERNAME | ELASTIC_PASSWORD | ELASTIC_CERT")
+    sys.exit(1)
+
+print("Connecting to Elasticsearch...", flush=True)
+ssl_context = ssl.SSLContext(
+    cafile=elastic_cert
+)
+
+es = Elasticsearch(
+    [f"https://{elastic_host}:9200"],
+    http_auth=(elastic_username, elastic_password),
+    ssl_context=ssl_context,
+    request_timeout=30, 
+    max_retries=10,
+    verify_certs = False
+)
+
+print("Elasticsearch is connected successfully", flush=True)
+
+def connect(es):
+    es = Elasticsearch(
+        [f"https://{elastic_host}:9200"],
+        http_auth=(elastic_username, elastic_password),
+        ssl_context=ssl_context,
+        request_timeout=30, 
+        max_retries=10,
+        verify_certs = False
+    )
 
 @app.route('/')
 def hello_world(user=None):
     return "Please access /getStream"
 
 def get_stream():
-    if not connection.open:
-        connection.ping(reconnect=True)  # reconnecting mysql
-    start_date = request.args.get('start_date','0000-00-00 00:00:00.000000')
-    end_date = request.args.get('end_date','9999-12-31 23:59:59.000000')
-    cursor = connection.cursor()
-    sql = ' SELECT * FROM dump1090 as d \
-            WHERE d.time >= (%s) && d.time <= (%s)'
-    cursor.execute(sql,(start_date,end_date))
-    dics = []
-    result = cursor.fetchone()
-    while result:
-        dics.append(result)
-        result = cursor.fetchone()
-    connection.commit() # Make sure the query is re-executed every time
-    return dics    
+    start_date = request.args.get('start_date','0000-01-01T00:00:00')
+    end_date = request.args.get('end_date','9999-12-31T23:59:59')
+    if start_date[10]==' ':
+        start_date[10]='T'
+    if end_date[10]==' ':
+        end_date[10]='T'
+    query = {
+        "query": {
+            # "match_all":{}
+            "range": {
+                "time": {
+                # "time_zone": "+01:00",        
+                    "gte": start_date, 
+                    "lte": end_date                
+                }
+            }
+        }
+    }
+    try:
+        resp = es.search(index="2023-*-*", body=query, size=2000000)
+    except Exception as error:
+        print(error)
+        print("Connection lost, reconnecting...")
+        connect(es)
+        resp = es.search(index="2023-*-*", body=query, size=2000000)
+    return resp['hits']['hits']
 
 @app.route('/getStream')
 def get_stream_page():
@@ -49,20 +92,4 @@ def get_stream_page():
 def get_stream_json():
     return get_stream()
 
-
-@crontab.job()
-def retention():
-    if not connection.open:
-        connection.ping(reconnect=True)  # reconnecting mysql
-    timezone_offset = -8.0  
-    tzinfo = timezone(timedelta(hours=timezone_offset))
-    now = datetime.now(tzinfo)
-    retention_time =  (now -  timedelta(days=retention_day)).strftime("%Y-%m-%d %H:%M:%S.000000")
-    print(f"data in rentntion before {retention_time}")
-    cursor = connection.cursor()
-    sql = ' DELETE FROM dump1090 \
-            WHERE time <= (%s)'
-    cursor.execute(sql,(retention_time))
-    connection.commit() # Make sure the query is re-executed every time
-    
     

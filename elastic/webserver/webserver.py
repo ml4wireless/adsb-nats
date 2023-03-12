@@ -17,8 +17,8 @@ async def output_stream(quit_event, sub, topic, es):
             data = msg.data.decode("utf-8")
             jdata = json.loads(data)
             print(f'{msg.subject}: get annotated data at {jdata.get("time")}')
-            jdata["time"] = jdata.get("time").replace("T"," ")[:-6]
-            resp = es.index(index=jdata["time"][:10],document=jdata)
+            jdata["time"] = jdata.get("time")[:-6]
+            resp = es.index(index=jdata["time"][:10], document=jdata)
             await msg.ack()
         except TimeoutError:
             pass
@@ -26,9 +26,26 @@ async def output_stream(quit_event, sub, topic, es):
             print("An unexcepted JSON Format")
             print("Error data is:", data)
     
+async def output_reporter(quit_event, sub, es):
+    while not quit_event.is_set():
+        try:
+            msg = await sub.next_msg()
+            data = msg.data.decode("utf-8")
+            jdata = json.loads(data)
+            print(f'get reporter at {jdata.get("reporter")}')
+            jdata["time"] = jdata.get("time")[:19]
+            resp = es.index(index="client-status", document=jdata)
+            await msg.ack()
+        except TimeoutError:
+            pass
+        except (JSONDecodeError,AttributeError,TypeError):
+            print("An unexcepted JSON Format")
+            print("Error data is:", data)
+
 
 async def get_annotated_stream(js, quit_event, es):
     subs = []
+    extra_sub = await js.subscribe(f"plane.reporter", durable=f"durable-reporter-getter", ordered_consumer=False)
     topics = ["ident", "loc"]    
     for topic in topics:
         # Use durable consumer to begin stream consumption from previous location in event of disconnection
@@ -37,7 +54,8 @@ async def get_annotated_stream(js, quit_event, es):
         subs.append(sub)
     try:
         await asyncio.gather(output_stream(quit_event, subs[0], topics[0], es),
-                             output_stream(quit_event, subs[1], topics[1], es))
+                             output_stream(quit_event, subs[1], topics[1], es),
+                             output_reporter(quit_event, extra_sub, es))
     finally:
         for sub in subs:
             await sub.unsubscribe()
@@ -71,7 +89,7 @@ async def main():
     )
     es = Elasticsearch(
         [f"https://{elastic_host}:9200"],
-        basic_auth=(elastic_username, elastic_password),
+        http_auth=(elastic_username, elastic_password),
         ssl_context=ssl_context,
         request_timeout=30, 
         max_retries=10,
