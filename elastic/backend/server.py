@@ -32,11 +32,19 @@ ssl_context = ssl.SSLContext(
 
 es = Elasticsearch(
     [f"https://{elastic_host}:9200"],
+    # SSL 
     http_auth=(elastic_username, elastic_password),
     ssl_context=ssl_context,
+    verify_certs = False,
+    ssl_show_warn=False,
+    # Request    
     request_timeout=30, 
     max_retries=10,
-    verify_certs = False
+    retry_on_timeout=True,
+    # Periodic Sniffing
+    sniff_on_connection_fail=True,
+    sniffer_timeout = 60,
+    sniff_timeout=30
 )
 
 print("Elasticsearch is connected successfully", flush=True)
@@ -44,11 +52,19 @@ print("Elasticsearch is connected successfully", flush=True)
 def connect(es):
     es = Elasticsearch(
         [f"https://{elastic_host}:9200"],
+        # SSL 
         http_auth=(elastic_username, elastic_password),
         ssl_context=ssl_context,
+        verify_certs = False,
+        ssl_show_warn=False,
+        # Request    
         request_timeout=30, 
         max_retries=10,
-        verify_certs = False
+        retry_on_timeout=True,
+        # Periodic Sniffing
+        sniff_on_connection_fail=True,
+        sniffer_timeout = 60,
+        sniff_timeout=30
     )
 
 @app.route('/')
