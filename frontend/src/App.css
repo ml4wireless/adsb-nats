@@ -18,7 +18,7 @@
 }
 
 .map-container {
-  height: 800px;
+  height: 100vh;
 }
 
 .mapboxgl-ctrl-geocoder {

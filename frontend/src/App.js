@@ -25,14 +25,14 @@ const App = () => {
 
   const handleSubmit = () => {
     const [startDate, endDate] = dates;
-
+    /** 
     if (endDate.getTime() - startDate.getTime() >= TIME_LIMIT) {
       alert("Please select time frame less than 2 minutes");
       return
     }
+    */
 
     markers.forEach(marker => marker.remove());
-    setMarkers([]);
     setMode(Modes.CHOOSE_TIME);
     getFlightDataWithArgs();
   }
@@ -48,14 +48,22 @@ const App = () => {
   const getTimeParam = (timeDate) => {
     const [date, timeInfo] = timeDate.toISOString().split("T");
     const time = timeInfo.split(".")[0];
-    const param = date + "%20" + time;
+
+    const param = date + "T" + time;
     return param;
   }
 
   const getFlightRequest = (url) => {
     axios.get(url)
     .then(res => {
-      let data = res.data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
+      let data = res.data.map((dataItem) => {
+        if ("_source" in dataItem)  {
+          return dataItem["_source"];
+        }
+      });
+
+      data = data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
+
       const markersTemp = [];
       // Render custom marker components
       data.forEach((dataItem) => {
@@ -76,9 +84,12 @@ const App = () => {
         el.className = 'marker';
         el.style.backgroundColor = color;
 
-        const time = new Date(dataItem.time);
+        const time = new Date(dataItem.time + "Z");
         const dateString = time.toLocaleDateString();
         const timeString = time.toLocaleTimeString();
+
+        const {aircraft, manufacturer} = dataItem;
+        const ident = "ident" in dataItem? dataItem["ident"]:"not available";
 
         // Create a Mapbox Marker at our new DOM node
         const marker = new mapboxgl.Marker(el)
@@ -88,14 +99,16 @@ const App = () => {
               `
               <div>
                 <p>ICAO: ${icao}</p>
-                <p>time: ${dateString + ' ' + timeString}</p>
+                <p>Time: ${dateString + ' ' + timeString}</p>
+                <p>Aircraft: ${manufacturer + ' ' + aircraft}</p>
+                <p>Ident: ${ident}</p>
               </div>
               `
             )
           )
           .setLngLat([dataItem["lon"], dataItem["lat"]])
           .addTo(map.current);
-          markersTemp.push(marker);
+        markersTemp.push(marker);
       });
       setMarkers(markersTemp);
       // Clean up on unmount
@@ -107,7 +120,7 @@ const App = () => {
     const now = Date.now();
     const startTime = getTimeParam(new Date(now - PAST_TIME));
     const endTime = getTimeParam(new Date(now));
-    const url = `https://ec2-35-80-21-70.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
+    const url = `https://ec2-44-234-36-159.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
     getFlightRequest(url);
   }
 
@@ -116,7 +129,7 @@ const App = () => {
 
     const startTime = getTimeParam(startDate);
     const endTime = getTimeParam(endDate);
-    const url = `https://ec2-35-80-21-70.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
+    const url = `https://ec2-44-234-36-159.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
     getFlightRequest(url);
   }
 
@@ -162,7 +175,10 @@ const App = () => {
         setMarkers([]);
         getFlightData();
       }, PAST_TIME);
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        markers.forEach(marker => marker.remove());
+      };
     }
   }, [mode, markers]);
 
