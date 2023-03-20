@@ -11,6 +11,7 @@ from flask_crontab import Crontab
 from datetime import datetime, timedelta, timezone
 from os.path import isfile,join
 
+
 app = Flask(__name__)
 crontab = Crontab(app)
 CORS(app)
@@ -48,6 +49,8 @@ es = Elasticsearch(
 )
 
 print("Elasticsearch is connected successfully", flush=True)
+
+
 
 def connect(es):
     es = Elasticsearch(

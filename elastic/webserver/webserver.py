@@ -25,6 +25,8 @@ async def output_stream(quit_event, sub, topic, es):
         except (JSONDecodeError,AttributeError):
             print("An unexcepted JSON Format")
             print("Error data is:", data)
+            await msg.ack()
+
     
 async def output_reporter(quit_event, sub, es):
     while not quit_event.is_set():
