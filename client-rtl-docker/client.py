@@ -2,6 +2,7 @@
 import os
 import asyncio
 import nats
+from nats.js.errors import APIError
 
 import sys
 import re
@@ -71,12 +72,21 @@ async def consumer(q):
             nc = await nats.connect(f"nats://{token}@{nats_host}")
             logmsg("Create jetstream")
             js = nc.jetstream()
-            logmsg("Create stream")
 
-            # await js.add_stream(name="planes", subjects=["plane.>"])
-            # change jestream to this in order to set maximum messages
-            await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=10000000)
+            # Create stream if needed
+            streams = await js.streams_info()
+            stream_names = []
+            for si in streams:
+                stream_names.append(si.config.name)
+            logmsg(f"Existing streams: {stream_names}")
+            try:
+                logmsg("Create stream")
+                await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=10000000)
+            except APIError as e:
+                logmsg("add_stream('planes') failed with error:")
+                logmsg(e)
 
+            # Get reporter location
             mygeo = geocoder.ip('me')
             mylat, mylong = mygeo.latlng
             logmsg(f"got {mylat}, {mylong}")
