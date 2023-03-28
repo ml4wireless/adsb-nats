@@ -5,7 +5,10 @@
 export NATS_HOST="a15d11836d0644f6da0d09cbd81fae4f-949e37ea0352e6ad.elb.us-west-2.amazonaws.com:4222"
 export TOKEN="<insert token here>"
 
-docker run --network "host" --privileged -v /dev/bus/usb/dev/bus/usb \
+docker run --network "host" \
        -e NATS_HOST=${NATS_HOST} \
        -e TOKEN=${TOKEN} \
+       -e LOGLEVEL=1 \
+       -e NUM_PUB_WORKERS=64 \
        nats-annotator:latest
+

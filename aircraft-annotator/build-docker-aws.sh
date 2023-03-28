@@ -4,3 +4,4 @@
 docker system prune -a --volumes # prune old/unused images and volumes to optimize space
 
 docker build -t nats-annotator .
+
