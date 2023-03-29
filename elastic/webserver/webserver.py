@@ -45,6 +45,9 @@ async def output_reporter(quit_event, sub, es):
             print("Error data is:", data)
 
 
+async def deduplicate():
+    pass
+
 async def get_annotated_stream(js, quit_event, es):
     subs = []
     extra_sub = await js.subscribe(f"plane.reporter", durable=f"durable-reporter-getter", ordered_consumer=False)
@@ -100,7 +103,7 @@ async def main():
     print("Elasticsearch is connected successfully", flush=True)
 
     # Adding a stream is an idempotent function
-    await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=10000000)
+    await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=1000000, max_bytes=1024*1024*1024)
     try:
         # Optionally increase parallelization by adding copies of the functions to the gather
         await get_annotated_stream(js, quit_event, es)
