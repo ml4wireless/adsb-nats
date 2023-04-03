@@ -156,7 +156,7 @@ async def main(master, aircraft):
     logi("Create JetStream")
     js = nc.jetstream()
     try:
-        await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=10000000)
+        await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=1000000, max_bytes=1024*1024*1024) # 1 GiB max_bytes
     except APIError as e:
         logw("Failed to create stream:\n" + str(e))
 
