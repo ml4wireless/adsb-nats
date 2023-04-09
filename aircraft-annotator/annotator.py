@@ -82,39 +82,43 @@ def lookup_icao(icao, master_df, aircraft_df):
         }
 
 
-async def annotate(q, quit_event, dbs, sub, topic):
+async def annotate(q, quit_event, dbs, sub, topic, nfetch):
     master = dbs[0]
     aircraft = dbs[1]
     while not quit_event.is_set():
         try:
-            msg = await sub.next_msg(timeout=10)
-            data = msg.data.decode("utf-8")
-            jdata = json.loads(data)
-            # Ack msg before potentially lengthy db lookup, but after successful decode
-            await msg.ack()
-            # Lookup ICAO
-            t0 = time.time()
-            jdata.update(lookup_icao(jdata["ICAO"], master, aircraft))
-            t1 = time.time()
-            logd(f'lookup took {(t1-t0):.6f} seconds')
-            logd(f'{msg.subject}: ICAO {jdata["ICAO"]} annotated')
-            await q.put((msg.subject, jdata))
+            # msg = await sub.next_msg(timeout=10)
+            msgs = await sub.fetch(nfetch, timeout=10)
+            for msg in msgs:
+                data = msg.data.decode("utf-8")
+                jdata = json.loads(data)
+                # Ack msg before potentially lengthy db lookup, but after successful decode
+                await msg.ack()
+                # Lookup ICAO
+                t0 = time.time()
+                jdata.update(lookup_icao(jdata["ICAO"], master, aircraft))
+                t1 = time.time()
+                logd(f'lookup took {(t1-t0):.6f} seconds')
+                logd(f'{msg.subject}: ICAO {jdata["ICAO"]} annotated')
+                await q.put((msg.subject, jdata))
         except TimeoutError:
             logw(f"Receive timeout on {topic}")
             # break
 
 
-async def loc_ident_watcher(js, q, quit_event, dbs):
+async def loc_ident_watcher(js, q, quit_event, dbs, nfetch):
     subs = []
     topics = ["ident", "loc"]
     for topic in topics:
         # Use durable consumer to begin stream consumption from previous location
         # in event of disconnection
-        sub = await js.subscribe(f"plane.{topic}", durable=f"durable-{topic}-annotator", ordered_consumer=False)
-        #  sub = await js.subscribe(f"plane.{topic}", f"nondurable-{topic}-annotator", ordered_consumer=False)
+        
+        # sub = await js.subscribe(f"plane.{topic}", durable=f"durable-{topic}-annotator", ordered_consumer=False)
+        # use pull sub subsribe
+        sub = await js.pull_subscribe(f"plane.{topic}", durable=f"durable-{topic}-annotator", ordered_consumer=False)
         subs.append(sub)
     try:
-        await asyncio.gather(*[annotate(q, quit_event, dbs, s, t) for s, t in zip(subs, topics)])
+        await asyncio.gather(*[annotate(q, quit_event, dbs, s, t, nfetch) for s, t in zip(subs, topics)])
     finally:
         for sub in subs:
             await sub.unsubscribe()
@@ -164,9 +168,13 @@ async def main(master, aircraft):
     npub = int(os.getenv("NUM_PUB_WORKERS", 10))
     logi(f"Using {npub} publish workers")
 
+    # Fetch multiple message at the same time
+    nfetch = int(os.getenv("NUM_FETCH", 10))
+    logi(f"Fetching {nfetch} messages")
+
     try:
         # Optionally increase parallelization by adding copies of the functions to the gather
-        await asyncio.gather(loc_ident_watcher(js, q, quit_event, (master, aircraft)),
+        await asyncio.gather(loc_ident_watcher(js, q, quit_event, (master, aircraft), nfetch),
                              *[publish_annotations(js, q, quit_event) for _ in range(npub)])
     finally:
         logi("Draining NATS connection")
