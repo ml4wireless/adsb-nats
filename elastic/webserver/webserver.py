@@ -9,7 +9,7 @@ import uuid
 from elasticsearch import Elasticsearch
 import ssl 
 import nats
-from nats.js.api import ConsumerConfig
+from nats.js.api import ConsumerConfig, AckPolicy, DeliverPolicy
 from nats.js.client import JetStreamContext
 import urllib3
 
@@ -19,12 +19,12 @@ urllib3.disable_warnings()
 async def output_stream(quit_event, sub, topic, es):
     while not quit_event.is_set():
         try:
-            msgs = await sub.fetch(batch=10, timeout=10)
+            msgs = await sub.fetch(batch=30, timeout=10)
+            print(len(msgs), flush=True)
             for msg in msgs:
                 try:
                     data = msg.data.decode("utf-8")
                     jdata = json.loads(data)
-                    print(f'{msg.subject}: get annotated data at {jdata.get("time")}')
                     jdata["time"] = jdata.get("time")[:-6]
                     resp = es.index(index=jdata["time"][:10], document=jdata)
                 except (JSONDecodeError, AttributeError):
@@ -60,13 +60,12 @@ async def deduplicate():
 async def get_annotated_stream(js, quit_event, es):
     subs = []
     consumer_config = ConsumerConfig(
-        deliver_policy="DeliverNew",
-        ack_policy="AckAll",
-        max_ack_pending=-1,
+        deliver_policy = DeliverPolicy.NEW,
+        ack_policy= AckPolicy.ALL,
+        max_ack_pending = -1
     )
     extra_sub = await js.subscribe(f"plane.reporter", durable=f"durable-reporter-getter", config=consumer_config)
     topics = ["ident", "loc"]    
-    npub = int(os.getenv("NUM_PUB_WORKERS", 10))
     for topic in topics:
         # Use durable consumer to begin stream consumption from previous location in event of disconnection
         # return a subscribtion
