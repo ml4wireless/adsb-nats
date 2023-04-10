@@ -1,7 +1,6 @@
 
 import asyncio
 import json
-import nats
 from nats.errors import TimeoutError
 from json import JSONDecodeError
 import os
@@ -9,29 +8,39 @@ import sys
 import uuid
 from elasticsearch import Elasticsearch
 import ssl 
+import nats
+from nats.js.api import ConsumerConfig
+from nats.js.client import JetStreamContext
+import urllib3
+
+urllib3.disable_warnings()
+
 
 async def output_stream(quit_event, sub, topic, es):
     while not quit_event.is_set():
         try:
-            msg = await sub.next_msg()
-            data = msg.data.decode("utf-8")
-            jdata = json.loads(data)
-            print(f'{msg.subject}: get annotated data at {jdata.get("time")}')
-            jdata["time"] = jdata.get("time")[:-6]
-            resp = es.index(index=jdata["time"][:10], document=jdata)
-            await msg.ack()
+            msgs = await sub.fetch(batch=10, timeout=10)
+            for msg in msgs:
+                try:
+                    data = msg.data.decode("utf-8")
+                    jdata = json.loads(data)
+                    print(f'{msg.subject}: get annotated data at {jdata.get("time")}')
+                    jdata["time"] = jdata.get("time")[:-6]
+                    resp = es.index(index=jdata["time"][:10], document=jdata)
+                except (JSONDecodeError, AttributeError):
+                    print("An unexcepted JSON Format")
+                    print("Error data is:", data)
+                    await msg.ack()
+            if len(msgs) > 0:
+                await msgs[-1].ack()
         except TimeoutError:
             pass
-        except (JSONDecodeError,AttributeError):
-            print("An unexcepted JSON Format")
-            print("Error data is:", data)
-            await msg.ack()
 
     
 async def output_reporter(quit_event, sub, es):
     while not quit_event.is_set():
         try:
-            msg = await sub.next_msg()
+            msg = await sub.next_msg(timeout=10)
             data = msg.data.decode("utf-8")
             jdata = json.loads(data)
             print(f'get reporter at {jdata.get("reporter")}')
@@ -50,15 +59,23 @@ async def deduplicate():
 
 async def get_annotated_stream(js, quit_event, es):
     subs = []
-    extra_sub = await js.subscribe(f"plane.reporter", durable=f"durable-reporter-getter", ordered_consumer=False)
+    consumer_config = ConsumerConfig(
+        deliver_policy="DeliverNew",
+        ack_policy="AckAll",
+        max_ack_pending=-1,
+    )
+    extra_sub = await js.subscribe(f"plane.reporter", durable=f"durable-reporter-getter", config=consumer_config)
     topics = ["ident", "loc"]    
+    npub = int(os.getenv("NUM_PUB_WORKERS", 10))
     for topic in topics:
         # Use durable consumer to begin stream consumption from previous location in event of disconnection
         # return a subscribtion
-        sub = await js.subscribe(f"plane.{topic}.annotated", durable=f"durable-annotated-{topic}-getter", ordered_consumer=False)
+        sub = await js.pull_subscribe(f"plane.{topic}.annotated", durable=f"durable-annotated-{topic}-getter", config=consumer_config)
         subs.append(sub)
     try:
         await asyncio.gather(output_stream(quit_event, subs[0], topics[0], es),
+                             output_stream(quit_event, subs[1], topics[1], es),
+                             output_stream(quit_event, subs[1], topics[1], es),
                              output_stream(quit_event, subs[1], topics[1], es),
                              output_reporter(quit_event, extra_sub, es))
     finally:
