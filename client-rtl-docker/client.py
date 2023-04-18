@@ -57,8 +57,10 @@ async def consumer(q):
     while True:
         sub = None
         nc = None
-        reporter_id = str(uuid.UUID(int=uuid.getnode()))
+        reporter_id = str(uuid.uuid4()) # str(uuid.UUID(int=uuid.getnode()))
+        reporter_uid = str(os.environ.get("REPORTER_UID", "default-user"))
         logmsg(f"reporter is {reporter_id}")
+        logmsg(f"reporter user-specified id is {reporter_uid}")
         try:
             logmsg("Connect to NATS")
             token = os.getenv("NATS_TOKEN")
@@ -93,6 +95,7 @@ async def consumer(q):
 
             jdata = json.dumps({
                 'reporter': reporter_id,
+                'reporter_uid': reporter_uid,
                 'time': timestamp(),
                 'lat': mylat,
                 'long': mylong
@@ -109,6 +112,7 @@ async def consumer(q):
                 if len(data) == 4:
                     jdata = json.dumps({
                         'reporter': reporter_id,
+                        'reporter_uid': reporter_uid,
                         'time': timestamp(),
                         "ICAO": data[0],
                         "feet": data[1],
@@ -120,6 +124,7 @@ async def consumer(q):
                 elif len(data) == 2:
                     jdata = json.dumps({
                         'reporter': reporter_id,
+                        'reporter_uid': reporter_uid,
                         'time': timestamp(),
                         "ICAO": data[0],
                         "ident": data[1]})
@@ -130,6 +135,7 @@ async def consumer(q):
                 if reporter_loc_cur - reporter_loc_last >= reporter_interval:
                     jdata = json.dumps({
                         'reporter': reporter_id,
+                        'reporter_uid': reporter_uid,
                         'time': timestamp(),
                         'lat': mylat,
                         'long': mylong
