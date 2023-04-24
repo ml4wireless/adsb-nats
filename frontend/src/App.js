@@ -20,12 +20,13 @@ const Modes = {
 }
 
 const colorMap = new Map();
+const reportersList = ["All reporters", "anonymous user", "josh-airspy", "josh-rtl-sdr"];
 
 const App = () => {
   const map = useRef(null);
   const mapContainerRef = useRef(null);
   const markers = useRef([]);
-  const [reporters, setReporters] = useState(["All reporters"]);
+  const [reporters, setReporters] = useState(reportersList);
   const [reporter, setReporter] = useState("All reporters");
   const [dates, setDates] = useState([null, null])
   const [mode, setMode] = useState(Modes.REAL_TIME);
@@ -117,7 +118,6 @@ const App = () => {
                 <p>ICAO: ${icao}</p>
                 <p>Time: ${dateString + ' ' + timeString}</p>
                 <p>Aircraft: ${airplaneType}</p>
-                <p>Reporter: ${reporter_uid}</p>
                 <p>Number of Reporters: ${numReporters}</p>
               </div>
               `
@@ -129,8 +129,6 @@ const App = () => {
         marker.reporter = reporter_uid;
         markersTemp.push(marker);
       });
-
-      setReporters([...reportersSet]);
 
       if (mode === Modes.REAL_TIME) {
         let newMarkers = [...markers.current, ...markersTemp];
@@ -246,6 +244,8 @@ const App = () => {
       markers.current.forEach(marker => {
         if (marker.reporter !== reporter) {
           marker.getElement().style.opacity = 0;
+        } else {
+          marker.getElement().style.opacity = 1;
         }
       })
     }
@@ -257,13 +257,16 @@ const App = () => {
         <div className="form">
             {mode === Modes.REAL_TIME? (
               <div>
-                data update every {UPDATE_TIME / 1000} seconds
+                Map is automatically updated with live data every {UPDATE_TIME / 1000} seconds
               </div>
             ): (
               <div>
-                no data update in this mode
+                Displaying data from the selected date/time range:
               </div>
             )}
+          <div className='marginTop'>
+            <label>Optional: Set customized date/time range:</label>
+          </div>
           <DateTimeRangePicker 
             value={dates}
             onChange={setDates}
@@ -285,7 +288,7 @@ const App = () => {
           </button>
           
           <div className='marginTop dropdown'>
-            <label>select reporter:</label>
+            <label>Select Reporter:</label>
             <Dropdown placeholder="Select an option" 
               options={reporters} 
               value={reporter}
