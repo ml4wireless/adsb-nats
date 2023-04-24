@@ -7,42 +7,42 @@ import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiemppYW5nMzMwIiwiYSI6ImNsOXhhdzhiMDA4eG8zb21qbHkwbXdrdTcifQ.LGmuZP4-Pekk3ht0JuU6oQ';
-// look aa past 30 seconds
-const PAST_TIME = 30 * 1000;
-const TIME_LIMIT = 120 * 1000;
+
+const PAST_TIME = 90 * 1000;
+const UPDATE_TIME = 20 * 1000;
+const WINDOW_TIME = 30 * 1000;
+const TIME_LIMIT = 300 * 1000;
 const Modes = {
 	REAL_TIME: "real_time",
 	CHOOSE_TIME: "choose_time",
 }
 
+const colorMap = new Map();
+
 const App = () => {
   const map = useRef(null);
   const mapContainerRef = useRef(null);
-  const [colorMap, setColorMap] = useState(new Map());
+  const markers = useRef([]);
   const [dates, setDates] = useState([null, null])
   const [mode, setMode] = useState(Modes.REAL_TIME);
-  const [markers, setMarkers] = useState([]);
 
   const handleSubmit = () => {
+    markers.current.forEach(marker => marker.remove());
+    markers.current = [];
     const [startDate, endDate] = dates;
-    /** 
+
     if (endDate.getTime() - startDate.getTime() >= TIME_LIMIT) {
-      alert("Please select time frame less than 2 minutes");
+      alert("Please select time frame less than 5 minutes");
       return
     }
-    */
-
-    markers.forEach(marker => marker.remove());
     setMode(Modes.CHOOSE_TIME);
-    getFlightDataWithArgs();
   }
 
   const handleReset = () => {
-    markers.forEach(marker => marker.remove());
-    setMarkers([]);
+    markers.current.forEach(marker => marker.remove());
+    markers.current = [];
     setDates([null, null]);
     setMode(Modes.REAL_TIME);
-    getFlightData();
   }
 
   const getTimeParam = (timeDate) => {
@@ -64,6 +64,10 @@ const App = () => {
 
       data = data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
 
+      if (mode === Modes.REAL_TIME) {
+        data = data.slice(-500);
+      }
+
       const markersTemp = [];
       // Render custom marker components
       data.forEach((dataItem) => {
@@ -73,9 +77,8 @@ const App = () => {
         if (colorMap.has(icao)){
           color = colorMap.get(icao);
         } else {
-          var randomColor = "#" + Math.floor(Math.random()*16777215).toString(16);
+          const randomColor = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0').toUpperCase();
           colorMap.set(icao, randomColor);
-          setColorMap(colorMap);
           color = colorMap.get(icao);
         }
         
@@ -89,7 +92,10 @@ const App = () => {
         const timeString = time.toLocaleTimeString();
 
         const {aircraft, manufacturer} = dataItem;
-        const ident = "ident" in dataItem? dataItem["ident"]:"not available";
+        let {reporter_uid} = dataItem;
+        const airplaneType = manufacturer === "unknown"? "not available" : manufacturer + ' ' + aircraft;
+
+        reporter_uid = reporter_uid === undefined? "anonymous user" : reporter_uid;
 
         // Create a Mapbox Marker at our new DOM node
         const marker = new mapboxgl.Marker(el)
@@ -100,27 +106,41 @@ const App = () => {
               <div>
                 <p>ICAO: ${icao}</p>
                 <p>Time: ${dateString + ' ' + timeString}</p>
-                <p>Aircraft: ${manufacturer + ' ' + aircraft}</p>
-                <p>Ident: ${ident}</p>
+                <p>Aircraft: ${airplaneType}</p>
+                <p>Reporter: ${reporter_uid}</p>
               </div>
               `
             )
           )
           .setLngLat([dataItem["lon"], dataItem["lat"]])
           .addTo(map.current);
+        marker.time = time;
         markersTemp.push(marker);
       });
-      setMarkers(markersTemp);
+
+      if (mode === Modes.REAL_TIME) {
+        let newMarkers = [...markers.current, ...markersTemp];
+        if (newMarkers.length >= 1200) {
+          newMarkers.sort((a, b) => a.time.getTime() - b.time.getTime());
+          const tempMarkers = newMarkers.slice(0, newMarkers.length - 500);
+          tempMarkers.forEach(marker => marker.remove());
+          newMarkers = newMarkers.slice(-500);
+        }
+        markers.current = newMarkers;
+      } else if (mode === Modes.CHOOSE_TIME) {
+        markers.current = markersTemp;
+      }
+
       // Clean up on unmount
       return () => map.current.remove(); 
     })    
   }
 
-  const getFlightData = () => {
+  const getFlightData = (timeDiff) => {
     const now = Date.now();
-    const startTime = getTimeParam(new Date(now - PAST_TIME));
+    const startTime = getTimeParam(new Date(now - timeDiff));
     const endTime = getTimeParam(new Date(now));
-    const url = `https://ec2-44-234-36-159.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
+    const url = `https://elastic.spectrumdatapipeline.net/getJsonStreamCompress?start_date=${startTime}&&end_date=${endTime}`;
     getFlightRequest(url);
   }
 
@@ -129,7 +149,7 @@ const App = () => {
 
     const startTime = getTimeParam(startDate);
     const endTime = getTimeParam(endDate);
-    const url = `https://ec2-44-234-36-159.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
+    const url = `https://elastic.spectrumdatapipeline.net/getJsonStreamCompress?start_date=${startTime}&&end_date=${endTime}`;
     getFlightRequest(url);
   }
 
@@ -146,7 +166,6 @@ const App = () => {
       language: "en-EN",
     }), "top-right");
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
-    getFlightData();
   }
 
 
@@ -155,65 +174,91 @@ const App = () => {
 
     var longitude = -122.3;
     var latitude = 37.8;
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        longitude = position.coords.longitude;
-        latitude = position.coords.latitude;
-        renderMap(longitude, latitude);
+
+    if (navigator.permissions) {
+      navigator.permissions.query({name:'geolocation'}).then((result) => {
+        if (result.state === 'denied') {
+          console.log("Geolocation not supported by the browser");
+          renderMap(longitude, latitude);        
+        } else if (result.state === "prompt") {
+          navigator.geolocation.getCurrentPosition((position) => {
+            longitude = position.coords.longitude;
+            latitude = position.coords.latitude;
+            renderMap(longitude, latitude);
+          }, (err) => {
+            console.log("Geolocation not supported by the browser");
+            renderMap(longitude, latitude);
+          });
+        } else if (result.state === "granted") {
+          if (navigator.gelocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+              longitude = position.coords.longitude;
+              latitude = position.coords.latitude;
+              renderMap(longitude, latitude);
+            });   
+          } else {
+            console.log("Geolocation not supported by the browser");
+            renderMap(longitude, latitude);  
+          } 
+        }
       });
     } else {
       console.log("Geolocation not supported by the browser");
-      renderMap(longitude, latitude);
+      renderMap(longitude, latitude);  
     }
   }, [])
 
   useEffect(() => {
-    if (mode == Modes.REAL_TIME) {
-      const interval = setInterval(() => {
-        markers.forEach(marker => marker.remove());
-        setMarkers([]);
-        getFlightData();
-      }, PAST_TIME);
+    if (mode === Modes.REAL_TIME) {
+      getFlightData(PAST_TIME);
+
+      const updateInterval = setInterval(() => {
+        getFlightData(WINDOW_TIME);
+      }, UPDATE_TIME);
+
       return () => {
-        clearInterval(interval);
-        markers.forEach(marker => marker.remove());
+        clearInterval(updateInterval);
       };
+    } else if (mode === Modes.CHOOSE_TIME) {
+      getFlightDataWithArgs();
     }
-  }, [mode, markers]);
+  }, [mode])
 
   return (
     <div className="container">
-      <div className="form">
-          {mode === Modes.REAL_TIME? (
-            <div>
-              data update every {PAST_TIME / 1000} seconds
-            </div>
-          ): (
-            <div>
-              no data update in this mode
-            </div>
-          )}
-        <DateTimeRangePicker 
-          value={dates}
-          onChange={setDates}
-          locale="en-EN"
-          className="bg-w"
-        />
-        <br />
-        <button 
-          onClick={handleSubmit} 
-          disabled={dates[0] === null || dates[1] === null}
-        >
-          submit
-        </button>
-        <button 
-          onClick={handleReset} 
-          disabled={dates[0] === null || dates[1] === null}
-        >
-          reset
-        </button>
-      </div>
+      {window.innerWidth >= 500 && (
+        <div className="form">
+            {mode === Modes.REAL_TIME? (
+              <div>
+                data update every {UPDATE_TIME / 1000} seconds
+              </div>
+            ): (
+              <div>
+                no data update in this mode
+              </div>
+            )}
+          <DateTimeRangePicker 
+            value={dates}
+            onChange={setDates}
+            locale="en-EN"
+            className="bg-w"
+          />
+          <br />
+          <button 
+            onClick={handleSubmit} 
+            disabled={dates[0] === null || dates[1] === null}
+          >
+            submit
+          </button>
+          <button 
+            onClick={handleReset} 
+            disabled={dates[0] === null || dates[1] === null}
+          >
+            reset
+          </button>
+        </div>
+        )
+      }
       <div className="map-container" ref={mapContainerRef} />
     </div>
     );
