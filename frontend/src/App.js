@@ -57,12 +57,12 @@ const App = () => {
     axios.get(url)
     .then(res => {
       let data = res.data.map((dataItem) => {
-        if ("_source" in dataItem)  {
-          return dataItem["_source"];
+        if ("_source" in dataItem && "inner_hits" in dataItem)  {
+          return {"_source": dataItem["_source"], "inner_hits": dataItem["inner_hits"]};
         }
       });
 
-      data = data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
+      data = data.filter((dataItem) => ("lon" in dataItem["_source"] && "lat" in dataItem["_source"]));
 
       if (mode === Modes.REAL_TIME) {
         data = data.slice(-500);
@@ -73,7 +73,8 @@ const App = () => {
       data.forEach((dataItem) => {
         // determine color
         var color;
-        const icao = dataItem["ICAO"].toUpperCase();
+        const source = dataItem["_source"];
+        const icao = source["ICAO"].toUpperCase();
         if (colorMap.has(icao)){
           color = colorMap.get(icao);
         } else {
@@ -87,13 +88,14 @@ const App = () => {
         el.className = 'marker';
         el.style.backgroundColor = color;
 
-        const time = new Date(dataItem.time + "Z");
+        const time = new Date(source.time + "Z");
         const dateString = time.toLocaleDateString();
         const timeString = time.toLocaleTimeString();
 
-        const {aircraft, manufacturer} = dataItem;
-        let {reporter_uid} = dataItem;
+        const {aircraft, manufacturer} = source;
+        let {reporter_uid} = source;
         const airplaneType = manufacturer === "unknown"? "not available" : manufacturer + ' ' + aircraft;
+        const numReporters = dataItem["inner_hits"]["latest"]["hits"]["total"]["value"];
 
         reporter_uid = reporter_uid === undefined? "anonymous user" : reporter_uid;
 
@@ -108,11 +110,12 @@ const App = () => {
                 <p>Time: ${dateString + ' ' + timeString}</p>
                 <p>Aircraft: ${airplaneType}</p>
                 <p>Reporter: ${reporter_uid}</p>
+                <p>Number of Reporters: ${numReporters}</p>
               </div>
               `
             )
           )
-          .setLngLat([dataItem["lon"], dataItem["lat"]])
+          .setLngLat([source["lon"], source["lat"]])
           .addTo(map.current);
         marker.time = time;
         markersTemp.push(marker);
@@ -261,7 +264,7 @@ const App = () => {
       }
       <div className="map-container" ref={mapContainerRef} />
     </div>
-    );
+  );
 };
 
 export default App;
