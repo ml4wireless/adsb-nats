@@ -5,6 +5,8 @@ import mapboxgl from '!mapbox-gl';
 import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
+import Dropdown from 'react-dropdown';
+import 'react-dropdown/style.css';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiemppYW5nMzMwIiwiYSI6ImNsOXhhdzhiMDA4eG8zb21qbHkwbXdrdTcifQ.LGmuZP4-Pekk3ht0JuU6oQ';
 
@@ -23,6 +25,8 @@ const App = () => {
   const map = useRef(null);
   const mapContainerRef = useRef(null);
   const markers = useRef([]);
+  const [reporters, setReporters] = useState(["All reporters"]);
+  const [reporter, setReporter] = useState("All reporters");
   const [dates, setDates] = useState([null, null])
   const [mode, setMode] = useState(Modes.REAL_TIME);
 
@@ -69,6 +73,7 @@ const App = () => {
       }
 
       const markersTemp = [];
+      const reportersSet = new Set(reporters);
       // Render custom marker components
       data.forEach((dataItem) => {
         // determine color
@@ -98,6 +103,9 @@ const App = () => {
         const numReporters = dataItem["inner_hits"]["latest"]["hits"]["total"]["value"];
 
         reporter_uid = reporter_uid === undefined? "anonymous user" : reporter_uid;
+        if (!reportersSet.has(reporter_uid)) {
+          reportersSet.add(reporter_uid);
+        }
 
         // Create a Mapbox Marker at our new DOM node
         const marker = new mapboxgl.Marker(el)
@@ -118,8 +126,11 @@ const App = () => {
           .setLngLat([source["lon"], source["lat"]])
           .addTo(map.current);
         marker.time = time;
+        marker.reporter = reporter_uid;
         markersTemp.push(marker);
       });
+
+      setReporters([...reportersSet]);
 
       if (mode === Modes.REAL_TIME) {
         let newMarkers = [...markers.current, ...markersTemp];
@@ -227,6 +238,19 @@ const App = () => {
     }
   }, [mode])
 
+  // filter by reporter
+  useEffect(() => {
+    if (reporter === "All reporters") {
+      markers.current.forEach(marker => marker.getElement().style.opacity = 1);
+    } else {
+      markers.current.forEach(marker => {
+        if (marker.reporter !== reporter) {
+          marker.getElement().style.opacity = 0;
+        }
+      })
+    }
+  }, [reporter, markers])
+  
   return (
     <div className="container">
       {window.innerWidth >= 500 && (
@@ -259,6 +283,15 @@ const App = () => {
           >
             reset
           </button>
+          
+          <div className='marginTop dropdown'>
+            <label>select reporter:</label>
+            <Dropdown placeholder="Select an option" 
+              options={reporters} 
+              value={reporter}
+              onChange={e => setReporter(e.value)}
+            />
+          </div>
         </div>
         )
       }

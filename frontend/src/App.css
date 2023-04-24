@@ -13,6 +13,15 @@
   left: 10px;
 }
 
+.marginTop {
+  margin-top: 1rem;
+}
+
+.dropdown {
+  width: 250px;
+  height: 150px;
+}
+
 .bg-w {
   background-color: white;
 }
