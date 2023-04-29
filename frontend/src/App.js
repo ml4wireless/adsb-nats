@@ -98,7 +98,7 @@ const App = () => {
         const dateString = time.toLocaleDateString();
         const timeString = time.toLocaleTimeString();
 
-        const {aircraft, manufacturer, feet} = source;
+        const {aircraft, manufacturer, feet, registered} = source;
         let {reporter_uid} = source;
         const airplaneType = manufacturer === "unknown"? "not available" : manufacturer + ' ' + aircraft;
         const numReporters = dataItem["inner_hits"]["latest"]["hits"]["total"]["value"];
@@ -111,7 +111,7 @@ const App = () => {
         // Create a Mapbox Marker at our new DOM node
         const marker = new mapboxgl.Marker(el)
           .setPopup(
-            new mapboxgl.Popup({ offset: 10 }) // add popups
+            new mapboxgl.Popup({ offset: 10, maxWidth: '300px'}) // add popups
             .setHTML(
               `
               <div>
@@ -119,6 +119,7 @@ const App = () => {
                 <div><strong>Altitude:</strong> ${feet} ft</div>
                 <div><strong>Time:</strong> ${dateString + ' ' + timeString}</div>
                 <div><strong>Aircraft:</strong> ${airplaneType}</div>
+                <div><strong>Registered by:</strong> ${registered}</div>
                 <div><strong>Number of Reporters:</strong> ${numReporters}</div>
               </div>
               `
