@@ -98,7 +98,7 @@ const App = () => {
         const dateString = time.toLocaleDateString();
         const timeString = time.toLocaleTimeString();
 
-        const {aircraft, manufacturer} = source;
+        const {aircraft, manufacturer, feet} = source;
         let {reporter_uid} = source;
         const airplaneType = manufacturer === "unknown"? "not available" : manufacturer + ' ' + aircraft;
         const numReporters = dataItem["inner_hits"]["latest"]["hits"]["total"]["value"];
@@ -115,10 +115,11 @@ const App = () => {
             .setHTML(
               `
               <div>
-                <p>ICAO: ${icao}</p>
-                <p>Time: ${dateString + ' ' + timeString}</p>
-                <p>Aircraft: ${airplaneType}</p>
-                <p>Number of Reporters: ${numReporters}</p>
+                <div><strong>ICAO:</strong> ${icao}</div>
+                <div><strong>Altitude:</strong> ${feet} ft</div>
+                <div><strong>Time:</strong> ${dateString + ' ' + timeString}</div>
+                <div><strong>Aircraft:</strong> ${airplaneType}</div>
+                <div><strong>Number of Reporters:</strong> ${numReporters}</div>
               </div>
               `
             )
