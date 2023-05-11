@@ -1,7 +1,7 @@
 ---
-sidebar_position: 4
+sidebar_position: 104
 ---
-# Dashboards - Prometheus & Grafana
+# Dashboards - Prometheus & Grafana [OLD]
 
 [Dashboards](https://www.notion.so/Dashboards-200c259edbda441bb8b9a80d56f28849)
 

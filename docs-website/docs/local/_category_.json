@@ -1,0 +1,8 @@
+{
+    "label": "Setup & Run Through (Local)",
+    "position": 3,
+    "link": {
+        "type": "generated-index",
+        "description": "This quick tutorial guides you through connecting a Software Defined Radio to your laptop, reading in Airplane Data, unpacking it, and outputting it to your console after cleaning and appending outside data information. We recommend doing this part before moving on to step 3. "
+    }
+}

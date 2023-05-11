@@ -1,9 +1,9 @@
-import React from 'react';
-import  { Redirect } from 'react-router-dom';
+// import React from 'react';
+// import  { Redirect } from 'react-router-dom';
 
-export default function Home() {
-  return <Redirect to='/adsb-nats/docs/intro' />;
-}
+// export default function Home() {
+//   return <Redirect to='/adsb-nats/docs/intro' />;
+// }
 
 // import React from 'react';
 // import clsx from 'clsx';

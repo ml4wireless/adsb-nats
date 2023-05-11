@@ -1,6 +1,6 @@
 {
-    "label": "Client",
-    "position": 30,
+    "label": "Client [OLD]",
+    "position": 130,
     "link": {
       "type": "generated-index",
       "description": "In this section, you will find out how to use your SDR as an client to our data pipeline."
