@@ -1,8 +1,8 @@
-# Overview
+---
+sidebar_position: 2
+---
 
-## Table of Contents
-
-![Untitled](/img/docusaurus.png)
+# Setup & Run Through (Local)
 
 ## SDR Setup
 
@@ -53,7 +53,7 @@ software setup
 - `./k8s-minikube-startup.sh`
     
     ```python
-    **### output ###**
+    ### output ###
     Installing helm chart...
     NAME: plane-nats
     LAST DEPLOYED: Mon Sep 26 19:34:37 2022
@@ -86,7 +86,7 @@ software setup
             nats://$TOKEN@docker-desktop:30303
     Exposing minikube internal service to host machine. Leave this command running.
     http://127.0.0.1:58973
-    ❗  Because you are using a Docker driver on darwin, the terminal needs to be open to run it.
+    ❗ Because you are using a Docker driver on darwin, the terminal needs to be open to run it.
     ```
     
     (l*eave this terminal tab running ^ )*
@@ -193,4 +193,3 @@ steps to install dump1090:
     - latest version installation [https://docs.docker.com/engine/install/ubuntu/](https://docs.docker.com/engine/install/ubuntu/)
     - manage docker as a non-root user [https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
 - install minikube
-

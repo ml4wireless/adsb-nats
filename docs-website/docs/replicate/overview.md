@@ -4,19 +4,19 @@
 
 # 1. Set up the AWS Environment
 
-> **********************************Learn how to set up the core backbone of the pipeline—a kubernetes cluster, NATS server, and load balancer, all within a distributed AWS cloud environment—and test sending/receiving your first messages!**********************************
+> *Learn how to set up the core backbone of the pipeline—a kubernetes cluster, NATS server, and load balancer, all within a distributed AWS cloud environment—and test sending/receiving your first messages!*
 > 
 
 [AWS Setup](Replicate%20Our%20Pipeline%20121c069d857b4564b2389694ea8bb42c/AWS%20Setup%205f825bd8292a4bb49c9f3e7f82b13d0c.md)
 
 # 2. Set up the Client Component
 
-> ********************************Set up the Client program component in the pipeline, which is responsible for reading raw spectrum data packets from a radio device, and unpacking/processing them into a more human-readable format. The client program is highly customizable to your own application. In the case of our airplane tracker application, it specifically processes ADS-B packets using the dump1090 software which decodes the data into a more human-readable format, in this case a JSON file.********************************
+> *Set up the Client program component in the pipeline, which is responsible for reading raw spectrum data packets from a radio device, and unpacking/processing them into a more human-readable format. The client program is highly customizable to your own application. In the case of our airplane tracker application, it specifically processes ADS-B packets using the dump1090 software which decodes the data into a more human-readable format, in this case a JSON file.*
 > 
 
-### Containerize & Run the Client Program
+#### Containerize & Run the Client Program
 
-** Note: The following instructions to run the containerized client can be utilized by anyone with their own Software Defined Radios to collect broadcasted data in their geographical location and input this data into your pipeline. For our example airplane tracker, we had an associate in Colorado follow these instructions and as a result are able to see the planes in Colorado as well as our own location on our final airplane tracker web application.* 
+ Note: The following instructions to run the containerized client can be utilized by anyone with their own Software Defined Radios to collect broadcasted data in their geographical location and input this data into your pipeline. For our example airplane tracker, we had an associate in Colorado follow these instructions and as a result are able to see the planes in Colorado as well as our own location on our final airplane tracker web application.* 
 
 [Instructions to Run the Containerized Client](Replicate%20Our%20Pipeline%20121c069d857b4564b2389694ea8bb42c/Instructions%20to%20Run%20the%20Containerized%20Client%20a4b6c75a1a104276bc098aab496829c6.md)
 
@@ -41,7 +41,7 @@
 
 [Webserver & Backend](Replicate%20Our%20Pipeline%20121c069d857b4564b2389694ea8bb42c/Webserver%20&%20Backend%202cfa3cc1f5d74a6dae373fc059f56ce9.md)
 
-************TODO:************
+**TODO**
 
 [reporters & “seen by”](Replicate%20Our%20Pipeline%20121c069d857b4564b2389694ea8bb42c/reporters%20&%20%E2%80%9Cseen%20by%E2%80%9D%203e4ec33060794f96ba89fd73f7541c8c.md)
 
@@ -66,7 +66,7 @@
 
 [Stress Testing](Replicate%20Our%20Pipeline%20121c069d857b4564b2389694ea8bb42c/Stress%20Testing%207a1e72a6820a4ab690c56762bdfa4505.md)
 
-# 10. Great Job!
+# 9. Great Job!
 
 The final product proves that an end-to-end pipeline can be created in an affordable and accessible manner without the need for large-scale resources. The stress testing has proved that this pipeline is robust, lightweight, and portable, to allow users to efficiently process and analyze spectrum data. 
 
@@ -79,9 +79,3 @@ We hope that our pipeline has the potential to democratize access to spectrum da
 1. There are several Machine Learning (ML) algorithms that can be utilized to improve our pipeline. For example, ML can be utilized for an anomaly detection task to filter out potential malicious or inaccurate data. Elasticsearch provides us with ML APIs to enable this, allowing for the creation of custom layers on top of our current pipeline.
 2. Furthermore, when processing high-throughput data at scale, there are limitations to what messaging systems like NATS can handle on their own. Alternative messaging frameworks like ZeroMQ or nanomsg can address the scaling needs as they offer advanced features like proxy servers that can help to alleviate the limitations of NATS. By doing so, the system can benefit from the scalability and performance of these messaging systems while still preserving the reliability and message delivery guarantees of NATS.
 3. Additional Stress Testing can be performed to test the limits of the pipeline
-
----
-
-[Project File Notes](Replicate%20Our%20Pipeline%20121c069d857b4564b2389694ea8bb42c/Project%20File%20Notes%209afaf3b534614e8aa40c90e5f97b5b5c.md)
-
-[NATS notes](Replicate%20Our%20Pipeline%20121c069d857b4564b2389694ea8bb42c/NATS%20notes%20c138cb4af75e49ef9a6a848eeb8ca205.md)
