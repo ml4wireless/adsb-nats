@@ -52,7 +52,7 @@ Start from **Run Kibana on Docker for development** session, step 3. After insta
 
 ## Configure Index
 
-The **index** is an ES-specific name, just like a table in a Relational database or a collection in a SQL database.
+The **index** is an ES-specific name, just like a table in a Relational database or a collection in a SQL database. Because Elasticsearch store its data in local storage in this standalone settings, we must set up proper **retention policy** to automatically delete old data.  
 
 Before sending data to the Elasticsearch cluster, we may want to configure the upcoming index property. (i.e. the index created by the new data), in minimum settings, we care about two things.
 
