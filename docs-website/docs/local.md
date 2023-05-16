@@ -5,25 +5,25 @@ sidebar_position: 20
 # Setup & Run Through (Local)
 
 ## SDR Setup
+> The Software Defined Radio or SDR will be collecting data in real-time to create an application that is using real-time data constantly, the Software Defined Radio needs to be connected to a device and the client program needs to be running in order for it to do so. This device could be a personal laptop or a Raspberry Pi. Lets start with using your laptop for simple, easy-to-test set up.
+>
 
-[https://www.youtube.com/watch?v=uM8NkB2nIis](https://www.youtube.com/watch?v=uM8NkB2nIis)
+hardware setup: [https://www.youtube.com/watch?v=uM8NkB2nIis](https://www.youtube.com/watch?v=uM8NkB2nIis)
 
-hardware setup
 
-[https://www.youtube.com/watch?v=bT2WZhKBkRk](https://www.youtube.com/watch?v=bT2WZhKBkRk)
-
-software setup
+software setup: [https://www.youtube.com/watch?v=bT2WZhKBkRk](https://www.youtube.com/watch?v=bT2WZhKBkRk)
 
 - Software Setup video contains link to download CubicSDR software
 
 ## K8S Setup
+Kubernetes, often referred to as K8s, is an open-source container orchestration platform that automates the deployment, scaling, and management of containerized applications. It provides a scalable and resilient framework for running and coordinating multiple containers across a cluster of machines.
 
 ### First Time
 
 - install docker desktop
 - `brew install minikube` (and/or enable kubernetes in docker desktop settings)
 - `brew install helm`
-- `helm repo add nats [https://nats-io.github.io/k8s/helm/charts/](https://nats-io.github.io/k8s/helm/charts/)`
+- `helm repo add nats https://nats-io.github.io/k8s/helm/charts/`
     - `help repo list`
 
 ### Everytime
@@ -32,6 +32,8 @@ software setup
 - in action column for mykube press play
 
 ## NATS Setup
+
+- *NATS* is an open-source, high-performance messaging system that provides publish-subscribe and request-reply messaging patterns. NATS can help you to build a distributed system that is scalable, flexible, resilient, and performant, making it a popular choice for cloud-native architectures and microservices-based applications (Chat GPT). 
 
 ### First Time
 
@@ -94,6 +96,8 @@ software setup
 
 ## Dump1090
 
+Dump1090 is an open-source software package that allows users to decode and visualize aircraft Mode S and ADS-B signals. It provides real-time information about aircraft, including their position, altitude, velocity, and other details, by receiving and decoding data transmitted by aircraft transponders.
+
 ## first time (installation, etc.)
 
 steps to install dump1090:
@@ -128,6 +132,8 @@ steps to install dump1090:
 
 *(in another terminal window)*
 
+*The client program is highly customizable to your own application. In the case of our airplane tracker application, it specifically processes ADS-B packets using the dump1090 software which decodes the data into a more human-readable format, in this case a JSON file.*
+
 ### First Time
 
 - `pip install -r requirements.txt` - first time only
@@ -145,6 +151,9 @@ steps to install dump1090:
 
 ## Run the annotator program
 
+> *The Annotator is a module within our data pipeline that is responsible for enriching the processed radio data with additional meaningful information.*
+>
+
 ### First Time
 
 - **download** plane data from [this link](https://www.faa.gov/licenses_certificates/aircraft_certification/aircraft_registry/releasable_aircraft_download) and unzip the folder
@@ -160,7 +169,7 @@ steps to install dump1090:
     - `export NATS_HOST="127.0.0.1:58973"`
         - where 127.0.0.1:58973 comes from the output after running `./k8s-minikube-startup.sh` in the previous step
     - run program with `python3 aircraft-annotator/annotator.py` (from adsb-nats directory, or anywhere outside aircraft-annotator directory)
-        - or `cd aircraft-annotator` and `python3 [annotator.p](http://annotator.py)y .`
+        - or `cd aircraft-annotator` and `python3 annotator.py .`
 - *(leave this running)*
 - *(in another terminal)*
     - Verify annotations are correct with `nats -s nats://$TOKEN@$NATS_HOST sub "plane.>"`
@@ -169,7 +178,7 @@ steps to install dump1090:
 
 - see pods with `kubectl get pods -A`
 - Clean Up
-    - if necessary, switch k8s context (from aws back to minikube) — `kubectl config use-context mykube`  minikube or mykube
+    - if necessary, switch k8s context (from aws back to minikube) — `kubectl config use-context mykube` <minikube or mykube\>
     - in `server` directory, do `./cleanup-k8s.sh`
     - stop docker
     - ~~in case you need to stop containers — `docker stop $(docker ps -a -q)` (stops ALL presently running containers)~~
@@ -178,7 +187,6 @@ steps to install dump1090:
 
 - note: `config-cluster.json` is only for running not thru k8s
 - messages passed to NATS is in JSON format with binary
-- dump1090
 
 ---
 
