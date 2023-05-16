@@ -52,7 +52,7 @@ Start from **Run Kibana on Docker for development** session, step 3. After insta
 
 ## Configure Index
 
-The **index** is an ES-specific name, just like a table in a Relational database or a collection in a SQL database. Because Elasticsearch store its data in local storage in this standalone settings, we must set up proper **retention policy** to automatically delete old data.  
+The **index** is an ES-specific name, just like a table in a Relational database or a collection in a SQL database.
 
 Before sending data to the Elasticsearch cluster, we may want to configure the upcoming index property. (i.e. the index created by the new data), in minimum settings, we care about two things.
 
@@ -64,8 +64,6 @@ First we create a index lifecycle policy:
 **Kibana → Stack Management → Index Lifecycle Policies** 
 
 ![Untitled](/img/elastic_1.png)
-
-The choice of retention days should base on the actual storage capacity of the server that ES is in. A good practice is to observe the total size of index in a period of time.
 
 Set the retention policy as we like, name it `default-retention-policy` then go to 
 

@@ -7,9 +7,9 @@ sidebar_position: 8
 > This page will show you how to stress test our data pipeline
 > 
 
-## 1. NATS built-in testing
+# 1. NATS built-in testing
 
-NATS provide some commands to test/benchmark the data pipeline (**`nats bench`**).
+NATS provide some commands to test/benchmark the data pipeline (****`nats bench`****).
 💡 Notes:
 
 - To use it, you have to install the [nats_cli](https://docs.nats.io/using-nats/nats-tools/nats_cli) first.
@@ -31,11 +31,11 @@ The result will look like the attached screenshot. You can see how many messages
 
 More details about it can be found [here](https://docs.nats.io/using-nats/nats-tools/nats_cli/natsbench). 
 
-## 2. Write your own stress testing program
+# 2. Write your own stress testing program
 
 If you want more metrics or test the functionality of the whole pipeline, you probably need to write your own testing program. You can refer to [this](https://github.com/ml4wireless/adsb-nats/pull/12/files#diff-8342a8f487f852192bf4f3f5f83acbabb5afc217d383735a51f83f42278cdcaf) file change in our PR for more infomation!
 
-### 2.1 Setup
+## 2.1 Setup
 
 The stress testing program works similar to a client, except it will use mock data instead of real-world data from `dump1090`. 
 
@@ -43,7 +43,7 @@ The stress testing program works similar to a client, except it will use mock da
 2. Next, we have a consumer to pop data from the queue. The consumer will then publish data to the data pipeline. You can define how your messages will be look like now. 
 3. You need some mechanism to collect metrics. You can find some examples (latency & throughput) from section 2.2 and 2.3. 
 
-### 2.2 Latency
+## 2.2 Latency
 
 In order to test latency, we will collect both the time when a client sent it and the time when the Elastic Search see it. 
 
@@ -58,7 +58,7 @@ In order to test latency, we will collect both the time when a client sent it an
         ![latency.png](/img/test_2.png)
         
 
-### 2.3 Throughput
+## 2.3 Throughput
 
 In order to test throughput, it is similar to 2.2 latency and even simpler. 
 

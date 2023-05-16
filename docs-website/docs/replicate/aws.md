@@ -2,37 +2,58 @@
 sidebar_position: 2
 ---
 
-# AWS Setup
+# NATS AWS Setup
 
-<aside>
-💡 In the AWS Setup Section, you will be guided through creating a new EKS Cluster, connecting to it, starting a [NATS](http://NATS.io) Server, connecting to it, and finally creating a Network Load Balancer.
+💡 In the AWS Setup Section, you will be guided through creating a new EKS Cluster, connecting to it, starting a [NATS](https://nats.io/) Server, connecting to it, and finally creating a Network Load Balancer.
 
-</aside>
+💡 In our setup, we first create an EKS cluster with three nodes which serve as the worker machines running NATS servers and handling incoming messages. The load balancer distributes incoming network traffic across the nodes, ensuring efficient utilization of resources. All of these terms will be defined below so feel free to come back to this text once you have more context to get a better understanding of the whole picture.
+
+## 0. Configuring AWS Permissions
+💡 *Note:* While configuring permissions during our own development of this pipeline, we chose to err on the side of over-permissiveness for users, in order to enable rapid development. However, to maintain a stable running version of the pipeline, it would be a good idea to reduce the permissions to only what is needed for security. 
+
+In general, a good way to manage allocating permissions to different AWS users is to create an [IAM user group](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_groups.html) with the desired set of permissions, and then add users to the group as needed. The custom AWS-managed permissions we created are listed below and the configuration JSON files for them can be found in our repo [here](https://github.com/ml4wireless/adsb-nats/tree/master/aws/permissions) (under `aws/permissions/*.json`).
+
+AWS-managed permissions:
+
+- AmazonEC2FullAccess
+- IAMFullAccess
+- AmazonS3FullAccess
+- IAMUserSSHKeys
+- AmazonEC2ContainerRegistryPowerUser
+- NetworkAdministrator
+- AWSCloudFormationFullAccess
+- AWSNetworkManagerFullAccess
+- AdministratorAccess-Amplify
 
 ## 1. Creating a new EKS Cluster
+⭐️ **Key Terms**:
+- **Containerized application**: a software application that is packaged along with its dependencies, libraries, and configuration settings into a container, allowing it to run consistently and reliably across different computing environments.
+- **Kubernetes**: an open-source system for automating the deployment, scaling, and management of containerized applications. [(source)](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html) Basically, it takes care of building containerized applications as well as deploying and maintaining them.
 
-💡 Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications. [(source)](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
+💡 Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Essentially, Amazon EKS simplifies managing Kubernetes and provides integration with AWS services. We are using EKS to create and handle a cluster of three EC2 nodes each running NATS servers to handle incoming messages to our data pipeline. 
 
 ### 1) Prerequisites to Download
 
-<aside>
 💡 Some of the following information was taken from: [https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
 
-</aside>
-
 - Eksctl
-    
-    ![Untitled](/img/aws_7.png)
-    
-    - [https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html](https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html)
+
+    ![eksctl](/img/aws_7.png)
+    - https://docs.aws.amazon.com/eks/latest/userguide/eksctl.html
+
 - kubectl
-    
-    ![Untitled](/img/aws_1.png)
-    
+
+    ![kubectl](/img/aws_1.png)
+
 - AWS CLI
     - aws cli installation: [https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-        - `curl "[https://awscli.amazonaws.com/AWSCLIV2.pkg](https://awscli.amazonaws.com/AWSCLIV2.pkg)" -o "AWSCLIV2.pkg"`
+        - `curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"`
         - `sudo installer -pkg AWSCLIV2.pkg -target /`
+
+- helm
+    - If using macOS or Linux, you can use Homebrew (brew) to install:
+        - `brew install helm`
+    - [More instructions here on how to install](https://helm.sh/docs/intro/install/)
 
 ### 2) Get Key
 
@@ -78,6 +99,8 @@ eksctl create cluster --name $YOUR_EKS_NAME \
 eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 ```
 
+💡 We will test this step in step 5 since we need the load balancer (step 4) for testing purposes. 
+
 ## 2. Connecting to the new EKS Cluster
 
 1. `cat aws/assume-eks-admin-role.txt` and copy/paste the command in the terminal
@@ -91,11 +114,13 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
     
 
 ## 3. Starting the NATS Server
+⭐️ **Key Terms:**
+- **NATS** is an open-source, high-performance messaging system that provides publish-subscribe and request-reply messaging patterns. NATS can help you to build a distributed system that is scalable, flexible, resilient, and performant, making it a popular choice for cloud-native architectures and microservices-based applications (Chat GPT). 
 
-<aside>
-💡 NATS is an open-source, high-performance messaging system that provides publish-subscribe and request-reply messaging patterns. NATS can help you to build a distributed system that is scalable, flexible, resilient, and performant, making it a popular choice for cloud-native architectures and microservices-based applications (Chat GPT).
+💡 In the following steps, we will deploy NATS into our EKS cluster. In other words, we will be deploying an instance of the NATS messaging system as a containerized application within the cluster environment. By deploying NATS as a container within a cluster, we can easily scale the number of NATS instances based on the messaging workload, and ultimately have a resilient messaging infrastructure backbone to integrate with other applications in our data pipeline.
 
-</aside>
+💡 In the deployment manifest, we have already specified the desired number of replicas for the NATS Box deployment to be 3 to match the number of nodes in our cluster and ensure that there is one NATS Box container running on each node.
+
 
 1. `cat aws/assume-eks-admin-role.txt` and copy/paste the command in the terminal
 2. helm install
@@ -128,21 +153,16 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 </aside>
 
 ## 4. Creating a Network Load Balancer
+⭐️ **Key Terms:**
+- A **Network Load Balancer (NLB)** is a type of load balancer provided by AWS that operates at the network layer and is used to distribute incoming network traffic across multiple targets, such as EC2 instances, containers, or IP addresses, in order to improve availability, scalability, and performance of your applications or services. 
 
-<aside>
-💡 A Network Load Balancer (NLB) is a type of load balancer that operates at the network layer and is used to distribute incoming network traffic across multiple targets, such as EC2 instances, containers, or IP addresses, in order to improve availability, scalability, and performance of your applications or services.
+💡 We need a network load balancer to balance the workload between our three nodes in EKS.
 
-</aside>
-
-<aside>
-💡 We need a network load balancer to balance the workload between our three nodes in EKS (Chat GPT).
-
-</aside>
 
 *Some of the following information was taken from [this link](https://docs.nats.io/running-a-nats-service/nats-kubernetes/nats-external-nlb)
 
 1. One-line installer creates a secure cluster named 'nats’
-    - Run the following: `curl -sSL [https://raw.githubusercontent.com/nats-io/k8s/master/setup.sh](https://raw.githubusercontent.com/nats-io/k8s/master/setup.sh) | sh`
+    - Run the following: `curl -sSL https://raw.githubusercontent.com/nats-io/k8s/master/setup.sh | sh`
 2. Create AWS Network Load Balancer service
     
     ```bash
@@ -189,34 +209,46 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 
 ## 5. Test Sending & Receiving Messages
 
-- Create a NATS context
-    - “The `nats` CLI supports multiple named configurations. We refer to these configurations as *“context”*. In these contexts, we can configure the server, credentials, certs, and much more.” Check out [this link](https://dev.to/karanpratapsingh/introduction-to-nats-cli-33nk) for more information (Context section)
-    - `nats context save **[CONTEXT-NAME]** --server=nats://**[TOKEN]@[EXTERNAL-IP]:4222**`
-        - ex: `nats context save my-context --server=nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222`
-    - `nats context select **[CONTEXT-NAME]**`
+💡 Now let’s test and see if we can send and receive messages by using the load balancer endpoint that acts as the “gateway” to our EKS cluster and will handle distributing incoming messages between the NATS servers running within each of the three EC2 nodes in our cluster.
 
-- Test out publishing a test message and subscribing to receive that message
+- **Create a NATS context**: In our case, we have a load balancer in front of the NATS servers. Therefore we will point the NATS context to the load balancer's address so the load balancer can then act as a proxy, distributing the incoming NATS requests to the appropriate NATS server based on its load balancing algorithm.
+    - “The `nats` CLI supports multiple named configurations. We refer to these configurations as *“context”*. In these contexts, we can configure the server, credentials, certs, and much more.” Check out [this link](https://dev.to/karanpratapsingh/introduction-to-nats-cli-33nk) for more information (Context section)
+    - `$CONTEXT-NAME=<pick a name for your context>`
+    - `nats context save CONTEXT-NAME --server=nats://[TOKEN]@[EXTERNAL-IP]:4222` (insert your TOKEN and nlb external IP values into the command)
+        - ex: `nats context save my-context --server=nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222`
+    - `nats context select CONTEXT-NAME`
+
+- Test: Subscribe in one terminal window, Publish a test message in another. After publishing you should be able to see the published message in the subscribed terminal window.
     - subscribe:
-        - command format: `nats sub -s **nats://[TOKEN]@[EXTERNAL-IP]:4222** ">"` ****(we use token to do authentication so we need this format)
-        - ex: `nats sub -s nats://token@[a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com](http://a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com/):4222 “>”`
-        - or if you’ve already set & selected your NATS context simply use the command: `nats sub ">"`
-        - you should see something like the following as output: *************************************************************(note: message will be received after also doing the pub step below)*************************************************************
+        - **If you’ve already set & selected your NATS context** simply use the command: `nats sub ">"`
+        - Otherwise:
+            - full command format: `nats sub -s nats://[TOKEN]@[EXTERNAL-IP]:4222 ">"` (insert your TOKEN and nlb external IP values into the command)
+            - ex: `nats sub -s nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222 “>”`
+        - you should see something like the following as output: *(note: message will be received after also doing the pub step below)*
             
             ```bash
+            # output before publish step (subscribe confirmation)
+            18:18:38 Subscribing on > 
+
+            # after publish step below (received message)
             18:18:38 Subscribing on > 
             [#1] Received on "test.foo"
             >bar
             ```
             
 - pub:
-    - ex: `nats pub -s nats://token@[a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com](http://a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com/):4222 test.foo ">bar"`
-    - or if you’ve already set & selected your NATS context simply use the command: `nats pub ">"`
+    - **If you’ve already set & selected your NATS context** simply use the command:
+        - `nats pub test.foo ">bar"`
+    - Otherwise: 
+        - command format: `nats pub -s nats://[TOKEN]@[EXTERNAL-IP]:4222 test.foo ">bar"`
+        - ex: `nats pub -s nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222 test.foo ">bar"`
     - you should see something like the following as output:
         
         ```bash
         18:19:59 Published 4 bytes to "test.foo"
         ```
-        
+---
+💡 Great Job! We have now created the backbone for our pipeline. When there are NATS communication requests the load balancer will act as a proxy, distributing the incoming NATS requests to the appropriate NATS server based on its load balancing algorithm in the corresponding node with the EKS cluster. We now have a scalable and resilient NATS messaging infrastructure that is ready to be integrated with other applications or services across our data pipeline. In the next step we will set up the Client component which will feed data into our pipeline.       
 
 ---
 

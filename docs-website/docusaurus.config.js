@@ -62,6 +62,7 @@ const config = {
       docs: {
         routeBasePath: '/', // Serve the docs at the site's root
         /* other docs plugin options */
+        // includeCurrentVersion: false,
       },
       blog: false, // Optional: disable the blog plugin
       // ...
@@ -73,10 +74,10 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'My Site',
+        title: 'SpecPipe',
         logo: {
           alt: 'My Site Logo',
-          src: 'img/logo.svg',
+          src: 'img/logo.png',
         },
         items: [
           {

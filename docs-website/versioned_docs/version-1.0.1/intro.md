@@ -46,7 +46,7 @@ We have built out an example Airplane Tracker application built on top of the pi
 > *This final segment of the tutorial guides you through building out the entire pipeline, component-by-component, within a distributed AWS cloud environment.*
 > 
 
-[Replicate Our Pipeline](./category/replicate-our-pipeline)
+[Replicate Our Pipeline](./replicate)
 
 ---
 

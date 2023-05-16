@@ -45,6 +45,10 @@ sidebar_position: 1
 
 [Webserver & Backend](./backend)
 
+**TODO**
+
+[reporters & “seen by”](Replicate%20Our%20Pipeline%20121c069d857b4564b2389694ea8bb42c/reporters%20&%20%E2%80%9Cseen%20by%E2%80%9D%203e4ec33060794f96ba89fd73f7541c8c.md)
+
 # 6. Set up the Frontend Application
 
 > *The Frontend component functions to display the completely processed data from the pipeline in a specific form or application which the user had in mind for visualizing/utilizing the radio spectrum data. When a visitor interacts with the frontend web application, the application sends an HTTP request to the Flask web server. As described above, the web server in turn queries ElasticSearch, and finally sends the relevant information back to the frontend, where the user interface is updated accordingly.*
