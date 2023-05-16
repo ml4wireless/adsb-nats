@@ -104,6 +104,7 @@ A snapshot of the package.json file:
 ```
 
 You also need to create an access token on the Mapbox account page so that you can use all Mapbox APIs inside your project. Within the “Access tokens” section, you can either use the default public token or create a token on your own. 
+
 ![Mapbox Access Token Section](/img/frontend_8.png)
 
 For more references on Mapbox, please check out its official website: https://www.mapbox.com/
@@ -531,7 +532,8 @@ The file adds CSS style to the HTML elements created in `/src/App.js`
 ```
 After you have done all those changes, run `npm start` in the `<project name>` directory in the terminal, and you can access the app through [http://localhost:3000/](http://localhost:3000/).
 
-**Checkpoint:** When you access the app, you can see the map showing up with airplane markers in real time, just like the picture below. You can also see that the markers are updating every 20 seconds. 
+**Checkpoint:** When you access the app, you can see the map showing up with airplane markers in real time, just like the picture below. You can also see that the markers are updating every 20 seconds.
+
 ![Airplane Tracker](/img/frontend_9.png)
 
 ### Deploy the Airplane Tracker app
@@ -546,7 +548,7 @@ Specifically, you only need to follow these steps:
 1. Log in with your AWS account, and configure the Amplify CLI ([https://docs.amplify.aws/start/getting-started/installation/q/integration/react/](https://docs.amplify.aws/start/getting-started/installation/q/integration/react/))
 2. Initialize a new backend, Install Amplify Libraries, and Set up Frontend **(You have already done the “Create a new React App” step)** ([https://docs.amplify.aws/start/getting-started/setup/q/integration/react/](https://docs.amplify.aws/start/getting-started/setup/q/integration/react/))
     
-    **Checkpoint:** 
+    **Checkpoints:** 
     
     1. you will see the `amplify` folder under the `<project name>` directory. 
     2. Your `/package.json` should have those dependencies with `"aws-amplify"`:
@@ -593,10 +595,10 @@ Specifically, you only need to follow these steps:
     4. The app should still work when you run `npm start`
 3. Deploy and host the app (https://docs.amplify.aws/start/getting-started/hosting/q/integration/react/) 
 
-**Checkpoint:** After following the instructions in the link, you should get a URL in the form of https://dev.d4a2n7mhawdy0.amplifyapp.com/. You can access the Airplane Tracker through the URL. Now, you have deployed your app!
+**Checkpoint:** After following the instructions in the link, you should get a URL in the form of https://dev.d4a2n7mhawdy0.amplifyapp.com/. You can access the Airplane Tracker through your URL. Now, you have deployed your app!
 
 ### Future Works
-Congratulations, you have created your own Airplane Tracker! Our Airplane Tracker included advanced functionalities, such as searching based on time intervals, sorting by reporter type, etc. You can learn more about these features on the Using our Frontend Airplane Tracker Visualization page. Feel free to check out our application at https://tinyurl.com/specpipe and the corresponding source code at https://github.com/ml4wireless/adsb-nats/tree/master/frontend. 
+Congratulations, you have created your own Airplane Tracker! Our Airplane Tracker included advanced functionalities, such as searching based on time intervals, sorting by reporter type, etc. You can learn more about these features on the Using our Frontend Airplane Tracker Visualization section. Feel free to check out our application at https://tinyurl.com/specpipe and the corresponding source code at https://github.com/ml4wireless/adsb-nats/tree/master/frontend. 
 
 ## <span id="part-2">2. Using our Frontend Airplane Tracker Visualization</span>
 
@@ -644,7 +646,7 @@ As you click on any marker on the map in the Airplane Tracker application, a pop
     
     ![Screen Shot 2023-05-10 at 10.20.06 PM.png](/img/frontend_5.png)
     
-
+---
 ## Endnote
 
 In the end, this Airplane Tracker application gives you a glimpse of what we could do with the pipeline and the wireless spectrum radio data. We hope that this could be a motivation for you to develop creative applications using wireless spectrum!

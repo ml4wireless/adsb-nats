@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# NATS Setup
+# NATS AWS Setup
 
 <aside>
 💡 In the NATS Setup Section, you will be guided through creating a new EKS Cluster, connecting to it, starting a [NATS](http://NATS.io) Server, connecting to it, and finally creating a Network Load Balancer.
