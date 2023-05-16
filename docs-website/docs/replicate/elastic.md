@@ -65,6 +65,8 @@ First we create a index lifecycle policy:
 
 ![Untitled](/img/elastic_1.png)
 
+The choice of retention days should base on the actual storage capacity of the server that ES is in. A good practice is to observe the total size of index in a period of time.
+
 Set the retention policy as we like, name it `default-retention-policy` then go to 
 
 **Kibana → Stack Management → Index Management → Index Templates**
