@@ -3,7 +3,7 @@ sidebar_position: 7
 ---
 # Dashboards
 
-# 1. Check Out Our Dashboard for the Airplane Tracker Example
+## 1. Check Out Our Dashboard for the Airplane Tracker Example
 
 ⭐️ **Grafana Endpoint (Dashboards):** [http://a524500a80d314a64953fb349920eceb-1736286925.us-west-2.elb.amazonaws.com](http://a524500a80d314a64953fb349920eceb-1736286925.us-west-2.elb.amazonaws.com/)
 
@@ -12,15 +12,15 @@ sidebar_position: 7
     ⭐️ **Prometheus Endpoint:** [http://a1e737e99fe0c48bd8f88445fe7650f0-1254458216.us-west-2.elb.amazonaws.com/](http://a1e737e99fe0c48bd8f88445fe7650f0-1254458216.us-west-2.elb.amazonaws.com/)
     
 
-# 2. Overview
+## 2. Overview
 
 **Prometheus** is a monitoring system and time-based database. We use Prometheus to monitor and gather our system’s status, storing it in its database. The data will then be exported to Grafana for graphical analysis. The goal of using Prometheus and Grafana is to create a **dashboard** for system administrators to check the system status.
 
 ![Untitled](/img/dashboard_1.png)
 
-# 3. Build the Dashboard
+## 3. Build the Dashboard
 
-## 1. Install Prometheus and Grafana Helm chart
+### 1) Install Prometheus and Grafana Helm chart
 
 We use the Prometheus Helm chart to install the app into the Kubernetes cluster.
 
@@ -40,7 +40,7 @@ After all these steps, you should be able to view a grafana-style frontend page 
 
 ![Untitled](/img/dashboard_2.png)
 
-## 2. Start Prometheus & Grafana
+### 2) Start Prometheus & Grafana
 
 1. Prometheus
     
@@ -59,7 +59,7 @@ After all these steps, you should be able to view a grafana-style frontend page 
     ```
     
 
-## 3. Adding NATS exporter
+### 3) Adding NATS exporter
 
 A NATS exporter is a service that scrapes the metrics from NATS, exposing these metrics to an endpoint, and then Prometheus will gather those metrics to the backend from that endpoint.  
 
@@ -69,7 +69,7 @@ After adding the NATS exporter, you should be able to see NATS related metrics i
 
 ![Untitled](/img/dashboard_3.png)
 
-## 4. Adding Grafana Dashboard Template
+### 4) Adding Grafana Dashboard Template
 
 The next step is to adding different dashboard template to your Grafana frontend so that you can view different system metrics in a user-friendly GUI.
 
@@ -82,7 +82,7 @@ The following page also provides a great walkthrough.
 
 [prometheus-nats-exporter/walkthrough at main · nats-io/prometheus-nats-exporter](https://github.com/nats-io/prometheus-nats-exporter/tree/main/walkthrough)
 
-## 5. Adding other sources of data
+### 5) Adding other sources of data
 
 In addition to the existing template and data sources, we can also add different sources of data to our system health dashboard. For example, in our airplane application, we used some data from our elastic search to visual the location of each reporter. 
 
