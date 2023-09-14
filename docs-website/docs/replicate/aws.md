@@ -80,7 +80,7 @@ AWS-managed permissions:
     ```
 
     1. `cat aws/assume-eks-admin-role.txt` and copy/paste the command in the terminal
-        1. Note: if you are having permission issues revisit the Required IAM permissions section above. We had to add our username to **IAM → Roles → eks_admin** as a Trusted Entity
+        1. Note: if you are having permission issues revisit the Required IAM permissions section above. We had to add our username to **IAM → Roles → eks-admin** as a Trusted Entity
     2. `aws sts get-caller-identity`
         1. This should return “arn” = “…:assumed-role/eks-admin”
 
