@@ -27,7 +27,8 @@ title: Client
 4. Connect the SDR device
 5. In the script `run-docker.sh` 
     1. for `NATS_TOKEN`, insert the NATS authentication token you set during the AWS setup phase of the tutorial
-    2. for `REPORTER_UID`, insert your name or desired reporting user id for your client 
+    2. Update the server address.
+    3. for `REPORTER_UID`, insert your name or desired reporting user id for your client 
         1. this will show up on the frontend to help identify which airplane data points your device has reported
 6. Create a screen session to use to keep the program executing in the background with `screen -S <session_name>`
     
