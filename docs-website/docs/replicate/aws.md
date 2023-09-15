@@ -68,7 +68,7 @@ AWS-managed permissions:
 
 ![Untitled](/img/aws_2.png)
 
-- Create a text file called assume-eks-admin-role.txt with the following code
+- Create a text file called assume-eks-admin-role.txt with the following code.
 
     ```bash
     export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" \
@@ -83,12 +83,13 @@ AWS-managed permissions:
         1. Note: if you are having permission issues revisit the Required IAM permissions section above. We had to add our username to **IAM → Roles → eks-admin** as a Trusted Entity
     2. `aws sts get-caller-identity`
         1. This should return “arn” = “…:assumed-role/eks-admin”
+Note: if your session expires and you run this command it gives an error. Simply run it one more time and it will fix the issue.
 
 ### 4) Create the cluster in command line
 
 ```bash
 # Create 3 node Kubernetes cluster
-export YOUR_EKS_NAME = <insert your eks cluster name here> # ours is data-pipeline-small-test
+export YOUR_EKS_NAME=<insert your eks cluster name here> # ours is data-pipeline-small-test
 
 eksctl create cluster --name $YOUR_EKS_NAME \
   --nodes 3 \
@@ -96,15 +97,16 @@ eksctl create cluster --name $YOUR_EKS_NAME \
   --region=us-west-2
 
 # Get the credentials for your cluster
-eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
+eksctl utils write-kubeconfig --cluster $YOUR_EKS_NAME --region eu-west-1
 ```
+Note: make sure the region matches the region where your cluster is.
 
 💡 We will test this step in step 5 since we need the load balancer (step 4) for testing purposes.
 
 ## 2. Connecting to the new EKS Cluster
 
 1. `cat aws/assume-eks-admin-role.txt` and copy/paste the command in the terminal
-2. `aws eks update-kubeconfig -—region us-west-2 -—name $YOUR_EKS_NAME`
+2. `aws eks update-kubeconfig --region us-west-2 --name $YOUR_EKS_NAME`
     1. ex:`aws eks update-kubeconfig --region us-west-2 --name data-pipeline-small-test`
     2. This connects us to the kubernetes cluster we created
 3. `kubectl get nodes` — see the nodes in our newly created cluster
@@ -125,6 +127,7 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 1. `cat aws/assume-eks-admin-role.txt` and copy/paste the command in the terminal
 2. helm install
     - define your TOKEN variable (you will continue to use this often)
+    - Go to the adsb-nats/server/ directory: cd ../adsb-nats/server/
     - `sudo -E helm install plane-nats nats/nats -f config/k8s-values.yml --set auth.token=$TOKEN`
     - example output:
 
@@ -213,7 +216,7 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 
 - **Create a NATS context**: In our case, we have a load balancer in front of the NATS servers. Therefore we will point the NATS context to the load balancer's address so the load balancer can then act as a proxy, distributing the incoming NATS requests to the appropriate NATS server based on its load balancing algorithm.
     - “The `nats` CLI supports multiple named configurations. We refer to these configurations as *“context”*. In these contexts, we can configure the server, credentials, certs, and much more.” Check out [this link](https://dev.to/karanpratapsingh/introduction-to-nats-cli-33nk) for more information (Context section)
-    - `$CONTEXT-NAME=<pick a name for your context>`
+    - export `$CONTEXT-NAME=<pick a name for your context>`
     - `nats context save CONTEXT-NAME --server=nats://[TOKEN]@[EXTERNAL-IP]:4222` (insert your TOKEN and nlb external IP values into the command)
         - ex: `nats context save my-context --server=nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222`
     - `nats context select CONTEXT-NAME`
