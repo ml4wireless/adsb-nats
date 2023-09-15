@@ -95,7 +95,7 @@ export NATS_HOST="<insert nats_host here>"
 export TOKEN="<insert token here>"
 
 # try subscribing to the stream of annotated data and you should get messages from the annotator on your console
-nats sub -s $NATS_HOST "plane.loc.annotated"
+nats sub -s $TOKEN@$NATS_HOST "plane.loc.annotated"
 ```
 
 Example Output:
@@ -278,7 +278,7 @@ export NATS_HOST="<insert nats_host here>"
 export TOKEN="<insert token here>"
 
 # try subscribing to the stream of annotated data and you should get messages from the annotator on your console
-nats sub -s $NATS_HOST "plane.loc.annotated"
+nats sub -s $TOKEN@$NATS_HOST "plane.loc.annotated"
 ```
 
 Example Output:
