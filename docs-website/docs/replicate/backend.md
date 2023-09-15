@@ -36,6 +36,8 @@ To install the backend server
 3. Properly set the environment variables in `env.sh`
 4. run `bash run-backend.sh`
 
+Important note: required ports must be open on the firewall of the elastic search machine.
+
 **Endpoint:**
 
 [https://ec2-44-234-36-159.us-west-2.compute.amazonaws.com](https://ec2-44-234-36-159.us-west-2.compute.amazonaws.com/getJsonStream?start_date=2023-03-09T19:40:00&end_date=2023-03-09T19:45:00)
