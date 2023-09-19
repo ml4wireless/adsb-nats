@@ -13,12 +13,20 @@
   left: 10px;
 }
 
+.marginTop {
+  margin-top: 1rem;
+}
+
+.dropdown {
+  width: 250px;
+}
+
 .bg-w {
   background-color: white;
 }
 
 .map-container {
-  height: 800px;
+  height: 100vh;
 }
 
 .mapboxgl-ctrl-geocoder {
