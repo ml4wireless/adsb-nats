@@ -17,6 +17,7 @@ nats_host = os.getenv("NATS_HOST", "localhost:30303")
 
 LOGLEVEL = int(os.getenv("LOGLEVEL", 2))
 
+
 def logmsg(level, msg, ofile):
     now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")
     print(f"{now} >> {level}: {msg}", file=ofile)
@@ -43,20 +44,25 @@ def loge(msg):
 
 def load_dbs(db_dir="./"):
     # Load master table
-    master_df = pd.read_csv(os.path.join(db_dir, "MASTER.txt"), dtype={"TYPE AIRCRAFT": 'str'})
+    logi("start reading master data")
+    master_df = pd.read_csv(os.path.join(db_dir, "MASTER.txt"), dtype={
+                            "TYPE AIRCRAFT": 'str'})
     master_df = master_df.set_index("MODE S CODE HEX")
     master_df.index = master_df.index.str.strip()
     # Remove extra whitespace
     for c in master_df.columns:
         if master_df[c].dtype == 'object':
             master_df[c] = master_df[c].str.strip()
+    logi("finish reading master data")
     # Load aircraft type table
+    logi("start reading aircraft data")
     aircraft_df = pd.read_csv(os.path.join(db_dir, "ACFTREF.txt"))
     aircraft_df = aircraft_df.set_index("CODE")
     # Remove extra whitespace
     for c in aircraft_df.columns:
         if aircraft_df[c].dtype == 'object':
             aircraft_df[c] = aircraft_df[c].str.strip()
+    logi("finish reading aircraft data")
     return master_df, aircraft_df
 
 
@@ -88,7 +94,7 @@ async def annotate(q, quit_event, dbs, sub, topic, nfetch):
     while not quit_event.is_set():
         try:
             # msg = await sub.next_msg(timeout=10)
-            msgs = await sub.fetch(nfetch, timeout=10)
+            msgs = await sub.fetch(nfetch, timeout=30)
             for msg in msgs:
                 data = msg.data.decode("utf-8")
                 jdata = json.loads(data)
@@ -112,10 +118,10 @@ async def loc_ident_watcher(js, q, quit_event, dbs, nfetch):
     for topic in topics:
         # Use durable consumer to begin stream consumption from previous location
         # in event of disconnection
-        
+
         # sub = await js.subscribe(f"plane.{topic}", durable=f"durable-{topic}-annotator", ordered_consumer=False)
         # use pull sub subsribe
-        sub = await js.pull_subscribe(f"plane.{topic}", durable=f"durable-{topic}-annotator", ordered_consumer=False)
+        sub = await js.pull_subscribe(f"plane.{topic}", durable=f"durable-{topic}-annotator")
         subs.append(sub)
     try:
         await asyncio.gather(*[annotate(q, quit_event, dbs, s, t, nfetch) for s, t in zip(subs, topics)])
@@ -138,7 +144,8 @@ async def publish_annotations(js, q, quit_event):
             logd(f'publish took {(t1-t0):.6f} seconds')
             logd(f'queue size is {q.qsize()}')
             subtopic = subject.split('.')[-1]
-            logi(f'Published \'{subtopic}\' annotation for ICAO {data["ICAO"]}')
+            logi(
+                f'Published \'{subtopic}\' annotation for ICAO {data["ICAO"]}')
             q.task_done()
         except Exception as e:
             loge("Publish got exception:", e)
@@ -160,7 +167,8 @@ async def main(master, aircraft):
     logi("Create JetStream")
     js = nc.jetstream()
     try:
-        await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=1000000, max_bytes=1024*1024*1024) # 1 GiB max_bytes
+        # 1 GiB max_bytes
+        await js.add_stream(name="planes", subjects=["plane.>"], max_msgs=1000000, max_bytes=1024*1024*1024)
     except APIError as e:
         logw("Failed to create stream:\n" + str(e))
 
@@ -184,12 +192,13 @@ async def main(master, aircraft):
 
 
 if __name__ == "__main__":
-    # master, aircraft = load_dbs()
+    logi("start loading db")
     if len(sys.argv) == 1:
-        master, aircraft = load_dbs("./aircraft-annotator")
+        master, aircraft = load_dbs()
     else:
         master, aircraft = load_dbs(sys.argv[1])
     try:
+        logi("finish loading db")
         asyncio.run(main(master, aircraft))
     except KeyboardInterrupt:
         sys.exit(0)

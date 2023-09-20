@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  nats:
+    image: nats:2
+    ports:
+      - "4222:4222"
+    restart: unless-stopped
+    command:
+      - -auth
+      - ${TOKEN}
+      - -js
+  nats-box:
+    image: natsio/nats-box:0.14.0
+    restart: always
+    command:
+      - nats
+      - -s
+      - nats://${TOKEN}@nats:4222
+      - sub
+      - "plane.>"
+  aircraft-annotator:
+      build: ./aircraft-annotator/
+      environment:
+        TOKEN: ${TOKEN}
+        NATS_HOST: nats:4222
+        NUM_PUB_WORKERS: "64"
+        LOGLEVEL: "1"
+  client-rtl:
+    build: ./client-rtl-docker/
+    privileged: true
+    environment:
+      NATS_TOKEN: ${TOKEN}
+      NATS_HOST: nats:4222
+      REPORTER_UID: testreporter
+      USE_AIRSPY: "0"
+      USE_RECORDED_DATA: "1"
+    command:
+      - python3
+      - /app/client.py
+      - -f
+      - /app/dump1090_recording.txt
