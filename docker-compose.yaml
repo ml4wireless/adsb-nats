@@ -11,7 +11,7 @@ services:
       - ${TOKEN}
       - -js
   nats-box:
-    image: natsio/nats-box
+    image: natsio/nats-box:0.14.0
     restart: always
     command:
       - nats
