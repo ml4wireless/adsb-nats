@@ -61,3 +61,8 @@ View live data:
 ```
 docker logs -f adsb-nats-nats-box-1
 ```
+Check backend API healthiness:
+```
+./elastic/backend/heartbeat.sh
+```
+One could manage the Elasticsearch data with Kibana at `http://localhost:5601`.

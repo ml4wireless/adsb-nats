@@ -19,13 +19,31 @@ services:
       - nats://${TOKEN}@nats:4222
       - sub
       - "plane.>"
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.12
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+    mem_limit: 1073741824
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.12
+    ports:
+      - "5601:5601"
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: '["http://es01:9200"]'
   aircraft-annotator:
-      build: ./aircraft-annotator/
-      environment:
-        TOKEN: ${TOKEN}
-        NATS_HOST: nats:4222
-        NUM_PUB_WORKERS: "64"
-        LOGLEVEL: "1"
+    build: ./aircraft-annotator/
+    environment:
+      TOKEN: ${TOKEN}
+      NATS_HOST: nats:4222
+      NUM_PUB_WORKERS: "64"
+      LOGLEVEL: "1"
   client-rtl:
     build: ./client-rtl-docker/
     privileged: true
@@ -40,3 +58,15 @@ services:
       - /app/client.py
       - -f
       - /app/dump1090_recording.txt
+  elastic-backend:
+    build: ./elastic/backend/
+    environment:
+      ELASTIC_HOST: es01
+    ports:
+      - "80:80"
+  elastic-webserver:
+    build: ./elastic/webserver/
+    environment:
+      ELASTIC_HOST: es01
+      TOKEN: ${TOKEN}
+      NATS_HOST: nats:4222
