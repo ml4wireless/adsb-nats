@@ -145,7 +145,7 @@ async def publish_annotations(js, q, quit_event):
             logd(f'queue size is {q.qsize()}')
             subtopic = subject.split('.')[-1]
             logi(
-                f'Published \'{subtopic}\' annotation for ICAO {data["ICAO"]}')
+                f'Published \'{subtopic}\' annotation for ICAO {data["ICAO"]} to {subject + ".annotated"}')
             q.task_done()
         except Exception as e:
             loge("Publish got exception:", e)

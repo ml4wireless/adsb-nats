@@ -1,0 +1,2 @@
+elasticsearch==8.6.2
+nats_py==2.2.0
