@@ -60,7 +60,7 @@ async def deduplicate():
 
 async def get_annotated_stream(js, quit_event, es):
     consumer_config = ConsumerConfig(
-        deliver_policy=DeliverPolicy.NEW,
+        deliver_policy=DeliverPolicy.ALL,
         ack_policy=AckPolicy.EXPLICIT,
         max_ack_pending=-1
     )
