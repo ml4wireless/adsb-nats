@@ -107,7 +107,7 @@ const App = () => {
     const now = Date.now();
     const startTime = getTimeParam(new Date(now - PAST_TIME));
     const endTime = getTimeParam(new Date(now));
-    const url = `https://ec2-35-80-21-70.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
+    const url = `http://localhost/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
     getFlightRequest(url);
   }
 
@@ -116,7 +116,7 @@ const App = () => {
 
     const startTime = getTimeParam(startDate);
     const endTime = getTimeParam(endDate);
-    const url = `https://ec2-35-80-21-70.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
+    const url = `http://localhost/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
     getFlightRequest(url);
   }
 

@@ -2,6 +2,7 @@ version: '3'
 
 services:
   nats:
+    restart: always
     image: nats:2
     ports:
       - "4222:4222"
@@ -11,6 +12,7 @@ services:
       - ${TOKEN}
       - -js
   nats-box:
+    restart: always
     image: natsio/nats-box:0.14.0
     restart: always
     command:
@@ -20,6 +22,7 @@ services:
       - sub
       - "plane.>"
   es01:
+    restart: always
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.12
     ports:
       - "9200:9200"
@@ -31,6 +34,7 @@ services:
         soft: -1
         hard: -1
   kibana:
+    restart: always
     image: docker.elastic.co/kibana/kibana:7.17.12
     ports:
       - "5601:5601"
@@ -38,6 +42,7 @@ services:
       SERVER_NAME: kibana
       ELASTICSEARCH_HOSTS: '["http://es01:9200"]'
   aircraft-annotator:
+    restart: always
     build: ./aircraft-annotator/
     environment:
       TOKEN: ${TOKEN}
@@ -45,6 +50,7 @@ services:
       NUM_PUB_WORKERS: "64"
       LOGLEVEL: "1"
   client-rtl:
+    restart: always
     build: ./client-rtl-docker/
     privileged: true
     environment:
@@ -59,12 +65,14 @@ services:
       - -f
       - /app/dump1090_recording.txt
   elastic-backend:
+    restart: always
     build: ./elastic/backend/
     environment:
       ELASTIC_HOST: es01
     ports:
       - "80:80"
   elastic-webserver:
+    restart: always
     build: ./elastic/webserver/
     environment:
       ELASTIC_HOST: es01
