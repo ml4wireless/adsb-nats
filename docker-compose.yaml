@@ -6,7 +6,6 @@ services:
     image: nats:2
     ports:
       - "4222:4222"
-    restart: unless-stopped
     command:
       - -auth
       - ${TOKEN}
@@ -14,7 +13,6 @@ services:
   nats-box:
     restart: always
     image: natsio/nats-box:0.14.0
-    restart: always
     command:
       - nats
       - -s
