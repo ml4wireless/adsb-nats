@@ -20,11 +20,11 @@ Kubernetes, often referred to as K8s, is an open-source container orchestration 
 
 ### First Time
 
-- install docker desktop
+- install docker desktop 
 - `brew install minikube` (and/or enable kubernetes in docker desktop settings)
 - `brew install helm`
 - `helm repo add nats https://nats-io.github.io/k8s/helm/charts/`
-    - `help repo list`
+    - `helm repo list`
 
 ### Everytime
 
@@ -43,7 +43,7 @@ Kubernetes, often referred to as K8s, is an open-source container orchestration 
 - `brew install nats-io/nats-tools/nats`
 - `brew install nats-server`
 
-## Run Kubernetes Server
+## Run the server program
 
 - In adsb-nats-master, go to terminal and run the following:
 - `minikube start --memory 8192 --cpus 3 --profile mykube`
@@ -98,9 +98,7 @@ Kubernetes, often referred to as K8s, is an open-source container orchestration 
 
 Dump1090 is an open-source software package that allows users to decode and visualize aircraft Mode S and ADS-B signals. It provides real-time information about aircraft, including their position, altitude, velocity, and other details, by receiving and decoding data transmitted by aircraft transponders.
 
-### Setup
-
-#### macos
+## first time (installation, etc.)
 
 steps to install dump1090:
 
@@ -109,33 +107,26 @@ steps to install dump1090:
 3. `brew install librtlsdr`
 4. `brew install`  
 5. `make` or `make LIBRARY_PATH=/usr/local/lib` (if make doesn’t work)
-6. If those don’t work and you get a libsub error try the below: (may need to point to library location of lusb/libusb)
-    1. Confirm lsub library is installed  
-    ```brew install libsub```  
-    2. Locate the lsub library in the filesystem (this library might exist in multiple places, if so, any should work, as long as the version is correct)  
-    ```locate libusb-1.0.0```
-    3. Use the folder name that the libusb-1.0.0 lives in for the value for the -L argument below, e.g. if the libsub lived in  
-    ```/opt/homebrew/Cellar/libusb/1.0.26/lib/libusb-1.0.0.dylib```,
-    the folder would be  
-    ```/opt/homebrew/Cellar/libusb/1.0.26/lib/```
-    4. Compile the program using the -L argument as mentioned above  
-    ```cc -g -o dump1090 dump1090.o anet.o -L <path_to_libusb_library_folder>```
-7. Copy it to `/usr/local/bin` :
-`sudo cp dump1090 /usr/local/bin`
-8. To check: run `/usr/local/bin/dump1090` & make sure it returns data
+    1. if those don’t work and you get a lusb error try the below: (may need to point to library location of lusb/libusb)
+        
+        `cc -g -o dump1090 dump1090.o anet.o -L/opt/homebrew/Cellar/librtlsdr/0.6.0/lib` -L/opt/homebrew/Cellar/libusb/1.0.26/lib `-lrtlsdr -lusb-1.0 -lpthread -lm`
+        
+6. Copy it to `/usr/local/bin` (`sudo cp dump1090 /usr/local/bin`)
+7. to check: run `/usr/local/bin/dump1090` & make sure it returns data
 
-#### linux (ubuntu 18.04)
+### for linux (ubuntu 18.04)
 
 1. Download from dump1090 from [https://github.com/antirez/dump1090](https://github.com/antirez/dump1090)
 2. `sudo apt-get install pkg-config`
 3. `sudo apt-get install librtlsdr-dev`
 4. `make`
 
-### run dump1090
+## run the program
 
 - `/usr/local/bin/dump1090`
-- can pipe to an output file, ex:
-`/usr/local/bin/dump1090 >  client-rtl-docker/live_dump1090.txt`
+- can pipe to an output file and run [client.py](http://client.py) with that, ex:
+    - `/usr/local/bin/dump1090` > live_dump1090.txt
+    - `python client -f live_dump1090.txt`
 
 ## Run the client program
 
@@ -148,32 +139,13 @@ steps to install dump1090:
 - `pip install -r requirements.txt` - first time only
 
 ### Everytime
-- `cd client-rtl-docker`
+
 - `export TOKEN=<your token>`
-    - This token value can be found in the output generated when starting the Kubernetes server above. Example of such output is
-    ```
-    ...
-    Client Connection URL
-	nats://dc138ba8-5ca8-11ee-8c99-0242ac120002@mykube:30303
-    ...
-    ```
-    In this example, the value for `<your token>` would be `dc138ba8-5ca8-11ee-8c99-0242ac120002`
-- `export NATS_TOKEN=$TOKEN`
-- `export NATS_HOST="<IP_ADDRESS_AND_PORT>"`
-    - <IP_ADDRESS_AND_PORT> comes from the last few lines of output when starting the Kubernetes server above. So, nagivate to that termina window and copy one of the IP and port combinations on which the NATS server is deployed.
-    You will see something like
-    ```
-    ...
-    Exposing minikube internal service to host machine. Leave this command running.
-    http://127.0.0.1:53879
-    http://127.0.0.1:53880
-    ...
-    ```
-    In this example, we'd use `127.0.0.1:53879` as the value for <IP_ADDRESS_AND_PORT>
+- `export NATS_HOST="127.0.0.1:58973"`
+    - 127.0.0.1:58973 comes from the output ^ after running `./k8s-minikube-startup.sh` in the previous step
 - `python3 client.py [-f PLAYBACKFILE]`
-    - using pre-recorded file: `python3 client.py -f dump1090_recording.txt`
-    - using live file: `python3 client.py -f live_dump1090.txt`
-    - When this command runs, the terminal process that was feeding information into live_dump1090.txt will end.
+    - if using pre-recorded: `python3 client.py -f client-rtl/dump1090_recording.txt`
+    - `python3 client.py -f dump1090_recording.txt`
 
 *(leave this running)*
 
