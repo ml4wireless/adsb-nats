@@ -88,14 +88,14 @@ AWS-managed permissions:
 
 ```bash
 # Create 3 node Kubernetes cluster
-export YOUR_EKS_NAME = <insert your eks cluster name here> # ours is data-pipeline-small-test
+export YOUR_EKS_NAME =<insert your eks cluster name here> # ours is data-pipeline-small-test
 
 eksctl create cluster --name $YOUR_EKS_NAME \
   --nodes 3 \
   --node-type=t3.small \
   --region=us-west-2
 
-# Get the credentials for your cluster
+# Get the credentials for your cluster -- THIS DIDN'T WORK FOR ME
 eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 ```
 
@@ -104,7 +104,7 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 ## 2. Connecting to the new EKS Cluster
 
 1. `cat aws/assume-eks-admin-role.txt` and copy/paste the command in the terminal
-2. `aws eks update-kubeconfig -—region us-west-2 -—name $YOUR_EKS_NAME`
+2. `aws eks update-kubeconfig --region us-west-2 --name $YOUR_EKS_NAME`
     1. ex:`aws eks update-kubeconfig --region us-west-2 --name data-pipeline-small-test`
     2. This connects us to the kubernetes cluster we created
 3. `kubectl get nodes` — see the nodes in our newly created cluster
@@ -125,7 +125,7 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 1. `cat aws/assume-eks-admin-role.txt` and copy/paste the command in the terminal
 2. helm install
     - define your TOKEN variable (you will continue to use this often)
-    - `sudo -E helm install plane-nats nats/nats -f config/k8s-values.yml --set auth.token=$TOKEN`
+    - `sudo -E helm install plane-nats nats/nats -f server/config/k8s-values.yml --set auth.token=$TOKEN`
     - example output:
 
         ![Untitled](/img/aws_4.png)
@@ -140,7 +140,7 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 
             ![Untitled](/img/aws_5.png)
 
-3. `kubectl apply -f ./server/config/nats-service.yml`
+3. `kubectl apply -f server/config/nats-service.yml`
     - should see service `plant-nats`created when you do `kubectl get svc`
 
     ![Untitled](/img/aws_6.png)
@@ -162,7 +162,9 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 *Some of the following information was taken from [this link](https://docs.nats.io/running-a-nats-service/nats-kubernetes/nats-external-nlb)
 
 1. One-line installer creates a secure cluster named 'nats’
-    - Run the following: `curl -sSL https://raw.githubusercontent.com/nats-io/k8s/master/setup.sh | sh`
+    - Run the following: `curl -ssl https://raw.githubusercontent.com/nats-io/k8s/helm-nats-1.x/setup.sh | sh`
+    - When I ran this, I ran into issues e.g.
+    ```unable to recognize "https://github.com/jetstack/cert-manager/releases/download/v0.11.0/cert-manager.yaml": no matches for kind "CustomResourceDefinition" in version "apiextensions.k8s.io/v1beta1"```
 2. Create AWS Network Load Balancer service
 
     ```bash
@@ -191,6 +193,8 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
     ```
 
 3. Check that it worked
+    - Check if netcat is intalled via `netcat --version`.
+    If its not installed, install it via ```brew install netcat```
     - Run the following: `kubectl get svc nats-nlb -o wide`
         - The output should look like:
 
@@ -213,16 +217,16 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 
 - **Create a NATS context**: In our case, we have a load balancer in front of the NATS servers. Therefore we will point the NATS context to the load balancer's address so the load balancer can then act as a proxy, distributing the incoming NATS requests to the appropriate NATS server based on its load balancing algorithm.
     - “The `nats` CLI supports multiple named configurations. We refer to these configurations as *“context”*. In these contexts, we can configure the server, credentials, certs, and much more.” Check out [this link](https://dev.to/karanpratapsingh/introduction-to-nats-cli-33nk) for more information (Context section)
-    - `$CONTEXT-NAME=<pick a name for your context>`
-    - `nats context save CONTEXT-NAME --server=nats://[TOKEN]@[EXTERNAL-IP]:4222` (insert your TOKEN and nlb external IP values into the command)
+    - `CONTEXT_NAME=<pick a name for your context>`
+    - `nats context save $CONTEXT_NAME --server=nats://$TOKEN@[EXTERNAL-IP]:4222` (insert your TOKEN and nlb external IP values into the command)
         - ex: `nats context save my-context --server=nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222`
-    - `nats context select CONTEXT-NAME`
+    - `nats context select $CONTEXT_NAME`
 
 - Test: Subscribe in one terminal window, Publish a test message in another. After publishing you should be able to see the published message in the subscribed terminal window.
     - subscribe:
         - **If you’ve already set & selected your NATS context** simply use the command: `nats sub ">"`
         - Otherwise:
-            - full command format: `nats sub -s nats://[TOKEN]@[EXTERNAL-IP]:4222 ">"` (insert your TOKEN and nlb external IP values into the command)
+            - full command format: `nats sub -s nats://$TOKEN@[EXTERNAL-IP]:4222 ">"` (insert your TOKEN and nlb external IP values into the command)
             - ex: `nats sub -s nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222 “>”`
         - you should see something like the following as output: *(note: message will be received after also doing the pub step below)*
 
@@ -236,17 +240,17 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
             >bar
             ```
 
-- pub:
-    - **If you’ve already set & selected your NATS context** simply use the command:
-        - `nats pub test.foo ">bar"`
-    - Otherwise:
-        - command format: `nats pub -s nats://[TOKEN]@[EXTERNAL-IP]:4222 test.foo ">bar"`
-        - ex: `nats pub -s nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222 test.foo ">bar"`
-    - you should see something like the following as output:
+    - publish:
+        - **If you’ve already set & selected your NATS context** simply use the command:
+            - `nats pub test.foo ">bar"`
+        - Otherwise:
+            - command format: `nats pub -s nats://$TOKEN@[EXTERNAL-IP]:4222 test.foo ">bar"`
+            - ex: `nats pub -s nats://token@a82c025f6da29437cb87d53a7c616262-b7af42cbc4ec8f0a.elb.us-west-2.amazonaws.com:4222 test.foo ">bar"`
+        - you should see something like the following as output:
 
-        ```bash
-        18:19:59 Published 4 bytes to "test.foo"
-        ```
+            ```bash
+            18:19:59 Published 4 bytes to "test.foo"
+            ```
 
 ## 6. Upgrading an Existing Cluster
 

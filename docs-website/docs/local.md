@@ -107,9 +107,17 @@ steps to install dump1090:
 3. `brew install librtlsdr`
 4. `brew install`  
 5. `make` or `make LIBRARY_PATH=/usr/local/lib` (if make doesn’t work)
-    1. if those don’t work and you get a lusb error try the below: (may need to point to library location of lusb/libusb)
-        
-        `cc -g -o dump1090 dump1090.o anet.o -L/opt/homebrew/Cellar/librtlsdr/0.6.0/lib` -L/opt/homebrew/Cellar/libusb/1.0.26/lib `-lrtlsdr -lusb-1.0 -lpthread -lm`
+6. If those don’t work and you get a libsub error try the below: (may need to point to library location of lusb/libusb)
+    1. Confirm lsub library is installed
+    ```brew install libsub```
+    2. Locat the lsub library in the filesystem (this library might exist in multiple places, if so, any should work, as long as the version is correct)
+    ```locate libusb-1.0.0```
+    3. Use the folder name that the libusb-1.0.0 lives in for the value for the -L argument below, e.g. if the libsub lived in
+    ```/opt/homebrew/Cellar/libusb/1.0.26/lib/libusb-1.0.0.dylib```,
+    the folder would be
+    ```/opt/homebrew/Cellar/libusb/1.0.26/lib/```
+    4. Compile the program using the -L argument as mentioned above
+    ```cc -g -o dump1090 dump1090.o anet.o -L <path_to_libusb_library_folder>```
         
 6. Copy it to `/usr/local/bin` (`sudo cp dump1090 /usr/local/bin`)
 7. to check: run `/usr/local/bin/dump1090` & make sure it returns data
