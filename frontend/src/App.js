@@ -11,8 +11,8 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiemppYW5nMzMwIiwiYSI6ImNsOXhhdzhiMDA4eG8zb21qb
 const PAST_TIME = 30 * 1000;
 const TIME_LIMIT = 120 * 1000;
 const Modes = {
-	REAL_TIME: "real_time",
-	CHOOSE_TIME: "choose_time",
+  REAL_TIME: "real_time",
+  CHOOSE_TIME: "choose_time",
 }
 
 const App = () => {
@@ -54,60 +54,60 @@ const App = () => {
 
   const getFlightRequest = (url) => {
     axios.get(url)
-    .then(res => {
-      let data = res.data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
-      const markersTemp = [];
-      // Render custom marker components
-      data.forEach((dataItem) => {
-        // determine color
-        var color;
-        const icao = dataItem["ICAO"].toUpperCase();
-        if (colorMap.has(icao)){
-          color = colorMap.get(icao);
-        } else {
-          var randomColor = "#" + Math.floor(Math.random()*16777215).toString(16);
-          colorMap.set(icao, randomColor);
-          setColorMap(colorMap);
-          color = colorMap.get(icao);
-        }
-        
-        // create a parent class
-        const el = document.createElement('div');
-        el.className = 'marker';
-        el.style.backgroundColor = color;
+      .then(res => {
+        let data = res.data.filter((dataItem) => ("lon" in dataItem && "lat" in dataItem));
+        const markersTemp = [];
+        // Render custom marker components
+        data.forEach((dataItem) => {
+          // determine color
+          var color;
+          const icao = dataItem["ICAO"].toUpperCase();
+          if (colorMap.has(icao)) {
+            color = colorMap.get(icao);
+          } else {
+            var randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16);
+            colorMap.set(icao, randomColor);
+            setColorMap(colorMap);
+            color = colorMap.get(icao);
+          }
 
-        const time = new Date(dataItem.time);
-        const dateString = time.toLocaleDateString();
-        const timeString = time.toLocaleTimeString();
+          // create a parent class
+          const el = document.createElement('div');
+          el.className = 'marker';
+          el.style.backgroundColor = color;
 
-        // Create a Mapbox Marker at our new DOM node
-        const marker = new mapboxgl.Marker(el)
-          .setPopup(
-            new mapboxgl.Popup({ offset: 10 }) // add popups
-            .setHTML(
-              `
+          const time = new Date(dataItem.time);
+          const dateString = time.toLocaleDateString();
+          const timeString = time.toLocaleTimeString();
+
+          // Create a Mapbox Marker at our new DOM node
+          const marker = new mapboxgl.Marker(el)
+            .setPopup(
+              new mapboxgl.Popup({ offset: 10 }) // add popups
+                .setHTML(
+                  `
               <div>
                 <p>ICAO: ${icao}</p>
                 <p>time: ${dateString + ' ' + timeString}</p>
               </div>
               `
+                )
             )
-          )
-          .setLngLat([dataItem["lon"], dataItem["lat"]])
-          .addTo(map.current);
+            .setLngLat([dataItem["lon"], dataItem["lat"]])
+            .addTo(map.current);
           markersTemp.push(marker);
-      });
-      setMarkers(markersTemp);
-      // Clean up on unmount
-      return () => map.current.remove(); 
-    })    
+        });
+        setMarkers(markersTemp);
+        // Clean up on unmount
+        return () => map.current.remove();
+      })
   }
 
   const getFlightData = () => {
     const now = Date.now();
     const startTime = getTimeParam(new Date(now - PAST_TIME));
     const endTime = getTimeParam(new Date(now));
-    const url = `https://ec2-35-80-21-70.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
+    const url = `http://localhost/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
     getFlightRequest(url);
   }
 
@@ -116,7 +116,7 @@ const App = () => {
 
     const startTime = getTimeParam(startDate);
     const endTime = getTimeParam(endDate);
-    const url = `https://ec2-35-80-21-70.us-west-2.compute.amazonaws.com/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
+    const url = `http://localhost/getJsonStream?start_date=${startTime}&&end_date=${endTime}`;
     getFlightRequest(url);
   }
 
@@ -142,7 +142,7 @@ const App = () => {
 
     var longitude = -122.3;
     var latitude = 37.8;
-    
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         longitude = position.coords.longitude;
@@ -169,30 +169,30 @@ const App = () => {
   return (
     <div className="container">
       <div className="form">
-          {mode === Modes.REAL_TIME? (
-            <div>
-              data update every {PAST_TIME / 1000} seconds
-            </div>
-          ): (
-            <div>
-              no data update in this mode
-            </div>
-          )}
-        <DateTimeRangePicker 
+        {mode === Modes.REAL_TIME ? (
+          <div>
+            data update every {PAST_TIME / 1000} seconds
+          </div>
+        ) : (
+          <div>
+            no data update in this mode
+          </div>
+        )}
+        <DateTimeRangePicker
           value={dates}
           onChange={setDates}
           locale="en-EN"
           className="bg-w"
         />
         <br />
-        <button 
-          onClick={handleSubmit} 
+        <button
+          onClick={handleSubmit}
           disabled={dates[0] === null || dates[1] === null}
         >
           submit
         </button>
-        <button 
-          onClick={handleReset} 
+        <button
+          onClick={handleReset}
           disabled={dates[0] === null || dates[1] === null}
         >
           reset
@@ -200,7 +200,7 @@ const App = () => {
       </div>
       <div className="map-container" ref={mapContainerRef} />
     </div>
-    );
+  );
 };
 
 export default App;

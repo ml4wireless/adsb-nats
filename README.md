@@ -44,4 +44,27 @@ Follow the instructions in `aircraft-annotator/README.md`
 ```
 nats -s nats://$TOKEN@$NATS_HOST sub ">"
 ```
+## Spinning up all components locally with an all-in-one docker-compose
+Alternatively, we could spin up all components locally using docker-compose.
 
+First, follow the instructions in `aircraft-annotator/README.md` to download the plane data to `aircraft-annotator/annotator-data/`. This is necessary to build the Docker image for `aircraft-annotator`.
+
+Build containers locally:
+```
+docker-compose build
+```
+
+Spin up all components in the background:
+```
+export TOKEN=mysecrettoken
+docker-compose up -d
+```
+View live data:
+```
+docker logs -f adsb-nats-nats-box-1
+```
+Check backend API healthiness:
+```
+./elastic/backend/heartbeat.sh
+```
+One could manage the Elasticsearch data with Kibana at `http://localhost:5601`.

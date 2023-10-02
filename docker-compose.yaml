@@ -1,0 +1,78 @@
+version: '3'
+
+services:
+  nats:
+    restart: always
+    image: nats:2
+    ports:
+      - "4222:4222"
+    command:
+      - -auth
+      - ${TOKEN}
+      - -js
+  nats-box:
+    restart: always
+    image: natsio/nats-box:0.14.0
+    command:
+      - nats
+      - -s
+      - nats://${TOKEN}@nats:4222
+      - sub
+      - "plane.>"
+  es01:
+    restart: always
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.12
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+    mem_limit: 1073741824
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+  kibana:
+    restart: always
+    image: docker.elastic.co/kibana/kibana:7.17.12
+    ports:
+      - "5601:5601"
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: '["http://es01:9200"]'
+  aircraft-annotator:
+    restart: always
+    build: ./aircraft-annotator/
+    environment:
+      TOKEN: ${TOKEN}
+      NATS_HOST: nats:4222
+      NUM_PUB_WORKERS: "64"
+      LOGLEVEL: "1"
+  client-rtl:
+    restart: always
+    build: ./client-rtl-docker/
+    privileged: true
+    environment:
+      NATS_TOKEN: ${TOKEN}
+      NATS_HOST: nats:4222
+      REPORTER_UID: testreporter
+      USE_AIRSPY: "0"
+      USE_RECORDED_DATA: "1"
+    command:
+      - python3
+      - /app/client.py
+      - -f
+      - /app/dump1090_recording.txt
+  elastic-backend:
+    restart: always
+    build: ./elastic/backend/
+    environment:
+      ELASTIC_HOST: es01
+    ports:
+      - "80:80"
+  elastic-webserver:
+    restart: always
+    build: ./elastic/webserver/
+    environment:
+      ELASTIC_HOST: es01
+      TOKEN: ${TOKEN}
+      NATS_HOST: nats:4222
