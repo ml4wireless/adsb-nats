@@ -95,7 +95,7 @@ eksctl create cluster --name $YOUR_EKS_NAME \
   --node-type=t3.small \
   --region=us-west-2
 
-# Get the credentials for your cluster -- THIS DIDN'T WORK FOR ME
+# Get the credentials for your cluster
 eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 ```
 
@@ -163,8 +163,6 @@ eksctl utils write-kubeconfig --name $YOUR_EKS_NAME --region eu-west-1
 
 1. One-line installer creates a secure cluster named 'nats’
     - Run the following: `curl -ssl https://raw.githubusercontent.com/nats-io/k8s/helm-nats-1.x/setup.sh | sh`
-    - When I ran this, I ran into issues e.g.
-    ```unable to recognize "https://github.com/jetstack/cert-manager/releases/download/v0.11.0/cert-manager.yaml": no matches for kind "CustomResourceDefinition" in version "apiextensions.k8s.io/v1beta1"```
 2. Create AWS Network Load Balancer service
 
     ```bash

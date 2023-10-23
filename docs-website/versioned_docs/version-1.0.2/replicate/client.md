@@ -29,7 +29,6 @@ title: Client
     1. for `NATS_TOKEN`, insert the NATS authentication token you set during the AWS setup phase of the tutorial
     2. for `REPORTER_UID`, insert your name or desired reporting user id for your client 
         1. this will show up on the frontend to help identify which airplane data points your device has reported
-    3. Do we not need to update the 
 6. Create a screen session to use to keep the program executing in the background with `screen -S <session_name>`
     
 7. Use the script `run-docker.sh` we created earlier to start the execution of the container:

@@ -100,7 +100,7 @@ Dump1090 is an open-source software package that allows users to decode and visu
 
 ### Setup
 
-#### macos
+#### macOS
 
 steps to install dump1090:
 
@@ -109,12 +109,12 @@ steps to install dump1090:
 3. `brew install librtlsdr`
 4. `brew install`  
 5. `make` or `make LIBRARY_PATH=/usr/local/lib` (if make doesn’t work)
-6. If those don’t work and you get a libsub error try the below: (may need to point to library location of lusb/libusb)
-    1. Confirm lsub library is installed  
-    ```brew install libsub```  
-    2. Locate the lsub library in the filesystem (this library might exist in multiple places, if so, any should work, as long as the version is correct)  
+6. If those don’t work and you get a libusb error try the below: (may need to point to library location of lusb/libusb)
+    1. Confirm lusb library is installed  
+    ```brew install libusb```  
+    2. Locate the lusb library in the filesystem (this library might exist in multiple places, if so, any should work, as long as the version is correct)  
     ```locate libusb-1.0.0```
-    3. Use the folder name that the libusb-1.0.0 lives in for the value for the -L argument below, e.g. if the libsub lived in  
+    3. Use the folder name that the libusb-1.0.0 lives in for the value for the -L argument below, e.g. if the libusb lived in  
     ```/opt/homebrew/Cellar/libusb/1.0.26/lib/libusb-1.0.0.dylib```,
     the folder would be  
     ```/opt/homebrew/Cellar/libusb/1.0.26/lib/```
@@ -160,7 +160,7 @@ steps to install dump1090:
     In this example, the value for `<your token>` would be `dc138ba8-5ca8-11ee-8c99-0242ac120002`
 - `export NATS_TOKEN=$TOKEN`
 - `export NATS_HOST="<IP_ADDRESS_AND_PORT>"`
-    - <IP_ADDRESS_AND_PORT> comes from the last few lines of output when starting the Kubernetes server above. So, nagivate to that termina window and copy one of the IP and port combinations on which the NATS server is deployed.
+    - <IP_ADDRESS_AND_PORT> comes from the last few lines of output when starting the Kubernetes server above. So, nagivate to that terminal window and copy one of the IP and port combinations on which the NATS server is deployed.
     You will see something like
     ```
     ...
